@@ -1,0 +1,178 @@
+import React, { useEffect, useState } from 'react'
+import {
+  PageSection,
+  Title,
+  Card,
+  CardTitle,
+  CardBody,
+  Button,
+  Spinner,
+  Alert,
+  Bullseye,
+  Split,
+  SplitItem,
+  DescriptionList,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  DescriptionListDescription,
+  Label,
+  Grid,
+  GridItem,
+} from '@patternfly/react-core'
+import { SyncAltIcon, CogIcon } from '@patternfly/react-icons'
+import { api } from '../api/client'
+
+export default function ConfigPage() {
+  const [config, setConfig] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const fetchConfig = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setConfig(await api.getConfig())
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchConfig() }, [])
+
+  return (
+    <>
+      <PageSection variant="light">
+        <Split hasGutter>
+          <SplitItem isFilled>
+            <Title headingLevel="h1" size="2xl">
+              <CogIcon style={{ marginRight: '8px' }} />
+              Configuration
+            </Title>
+            <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px' }}>
+              Application configuration (non-sensitive properties)
+            </p>
+          </SplitItem>
+          <SplitItem>
+            <Button variant="secondary" icon={<SyncAltIcon />} onClick={fetchConfig} isLoading={loading}>
+              Refresh
+            </Button>
+          </SplitItem>
+        </Split>
+      </PageSection>
+
+      {error && (
+        <PageSection>
+          <Alert variant="danger" title="Failed to load configuration" isInline>{error}</Alert>
+        </PageSection>
+      )}
+
+      {loading && !config && (
+        <PageSection><Bullseye><Spinner size="xl" /></Bullseye></PageSection>
+      )}
+
+      {config && (
+        <PageSection>
+          <Grid hasGutter>
+            <GridItem span={12} md={6}>
+              <Card isCompact>
+                <CardTitle>Application</CardTitle>
+                <CardBody>
+                  <DescriptionList isHorizontal isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Name</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <span style={{ fontFamily: 'monospace' }}>{config['application.name']}</span>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Version</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <Label isCompact variant="outline">{config['application.version']}</Label>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>HTTP Port</DescriptionListTerm>
+                      <DescriptionListDescription>{config['http.port']}</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </CardBody>
+              </Card>
+            </GridItem>
+
+            <GridItem span={12} md={6}>
+              <Card isCompact>
+                <CardTitle>Pipelines</CardTitle>
+                <CardBody>
+                  <DescriptionList isHorizontal isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Namespaces</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          {(config.pipelines?.namespaces || []).map((ns) => (
+                            <Label key={ns} isCompact color="blue">{ns}</Label>
+                          ))}
+                        </div>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Watch Interval</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {config.pipelines?.['watch-interval']}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </CardBody>
+              </Card>
+            </GridItem>
+
+            <GridItem span={12} md={6}>
+              <Card isCompact>
+                <CardTitle>OpenTelemetry</CardTitle>
+                <CardBody>
+                  <DescriptionList isHorizontal isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Enabled</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <Label isCompact color={config.opentelemetry?.enabled ? 'green' : 'grey'}>
+                          {config.opentelemetry?.enabled ? 'Yes' : 'No'}
+                        </Label>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>OTLP Endpoint</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                          {config.opentelemetry?.endpoint}
+                        </span>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </CardBody>
+              </Card>
+            </GridItem>
+
+            <GridItem span={12} md={6}>
+              <Card isCompact>
+                <CardTitle>Runtime</CardTitle>
+                <CardBody>
+                  <DescriptionList isHorizontal isCompact>
+                    {config.runtime && Object.entries(config.runtime).map(([k, v]) => (
+                      <DescriptionListGroup key={k}>
+                        <DescriptionListTerm>{k}</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{String(v)}</span>
+                        </DescriptionListDescription>
+                      </DescriptionListGroup>
+                    ))}
+                  </DescriptionList>
+                </CardBody>
+              </Card>
+            </GridItem>
+          </Grid>
+        </PageSection>
+      )}
+    </>
+  )
+}

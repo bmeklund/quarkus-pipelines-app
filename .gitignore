@@ -1,0 +1,42 @@
+# Maven
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# macOS
+.DS_Store
+
+# Frontend
+src/main/webui/node_modules/
+src/main/webui/dist/
+src/main/webui/.vite/
+
+# Quarkus
+.quarkus/
+
+# Native image
+*-runner
+*-runner.exe
+
+# Claude Code local settings
+.claude/
+
+# Local config overrides (may contain secrets)
+application-local.properties
+src/main/resources/application-local.properties
+
+# Logs
+*.log

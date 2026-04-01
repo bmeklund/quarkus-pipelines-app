@@ -125,7 +125,7 @@ export default function PipelinesPage() {
               </Button>
             </ToolbarItem>
             <ToolbarItem align={{ default: 'alignRight' }}>
-              <Button variant="primary" icon={<PlayIcon />} onClick={() => setTriggerModal(true)}>
+              <Button variant="primary" icon={<PlayIcon />} onClick={() => setTriggerModal(true)} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
                 Trigger Run
               </Button>
             </ToolbarItem>
@@ -176,7 +176,7 @@ export default function PipelinesPage() {
         isOpen={triggerModal}
         onClose={() => setTriggerModal(false)}
         actions={[
-          <Button key="trigger" variant="primary" onClick={handleTrigger} isLoading={triggering}>
+          <Button key="trigger" variant="primary" onClick={handleTrigger} isLoading={triggering} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
             Trigger
           </Button>,
           <Button key="cancel" variant="link" onClick={() => setTriggerModal(false)}>

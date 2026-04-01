@@ -34,9 +34,8 @@ src/main/webui/.vite/
 # Claude Code local settings
 .claude/
 
-# Local config overrides (may contain secrets)
-application-local.properties
-src/main/resources/application-local.properties
+# Local config overrides (may contain secrets — never commit)
+src/main/resources/application-dev.properties
 
 # Logs
 *.log

@@ -5,6 +5,8 @@ import {
   Masthead,
   MastheadMain,
   MastheadBrand,
+  MastheadToggle,
+  PageToggleButton,
   Nav,
   NavList,
   NavItem,
@@ -16,8 +18,10 @@ import {
   TasksIcon,
   HeartbeatIcon,
   CogIcon,
+  BarsIcon,
 } from '@patternfly/react-icons'
 
+import quarkusLogo from './assets/quarkus_logo.png'
 import Dashboard from './pages/Dashboard'
 import PipelinesPage from './pages/PipelinesPage'
 import PipelineRunDetailPage from './pages/PipelineRunDetailPage'
@@ -32,24 +36,39 @@ const navItems = [
 ]
 
 export default function App() {
-  const [sidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const location = useLocation()
 
   const masthead = (
-    <Masthead style={{ backgroundColor: '#151515' }}>
+    <Masthead style={{ backgroundColor: '#151515', position: 'relative' }}>
       <MastheadMain>
+        <MastheadToggle>
+          <PageToggleButton
+            variant="plain"
+            aria-label="Global navigation"
+            isSidebarOpen={sidebarOpen}
+            onSidebarToggle={() => setSidebarOpen((o) => !o)}
+            style={{ color: 'white' }}
+          >
+            <BarsIcon />
+          </PageToggleButton>
+        </MastheadToggle>
         <MastheadBrand>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">
-              <circle cx="18" cy="18" r="18" fill="#EE0000" />
-              <text x="18" y="23" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">RH</text>
-            </svg>
-            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>
-              Quarkus Pipelines App
-            </span>
-          </span>
+          <img src={quarkusLogo} alt="Quarkus" style={{ height: '36px' }} />
         </MastheadBrand>
       </MastheadMain>
+      <span style={{
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        color: 'white',
+        fontWeight: 700,
+        fontSize: '1.4rem',
+        whiteSpace: 'nowrap',
+        paddingTop: '15px',
+      }}>
+        Quarkus Pipelines App
+      </span>
     </Masthead>
   )
 
@@ -84,7 +103,7 @@ export default function App() {
   )
 
   return (
-    <Page masthead={masthead} sidebar={sidebar} isManagedSidebar>
+    <Page masthead={masthead} sidebar={sidebar} isSidebarOpen={sidebarOpen}>
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/pipelines" element={<PipelinesPage />} />

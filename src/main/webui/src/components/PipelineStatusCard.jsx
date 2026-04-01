@@ -76,9 +76,12 @@ export default function PipelineStatusCard({ run }) {
       isClickable
       onClick={() => navigate(`/pipelines/${run.namespace}/${run.name}`)}
       style={{
-        borderLeft: `4px solid var(--pf-v6-global--${
-          run.status === 'Failed' ? 'danger' : run.status === 'Succeeded' ? 'success' : 'info'
-        }-color--100, #0066CC)`,
+        borderLeft: `4px solid ${
+          run.status === 'Failed' ? '#C9190B'
+          : run.status === 'Succeeded' ? '#3E8635'
+          : run.status === 'Cancelled' ? '#F0AB00'
+          : '#4695EB'
+        }`,
         cursor: 'pointer',
       }}
     >

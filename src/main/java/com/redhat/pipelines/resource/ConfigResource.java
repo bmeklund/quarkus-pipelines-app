@@ -25,6 +25,9 @@ public class ConfigResource {
     @ConfigProperty(name = "quarkus.kubernetes-client.namespace", defaultValue = "default")
     String namespace;
 
+    @ConfigProperty(name = "quarkus.kubernetes-client.api-server-url", defaultValue = "")
+    String apiServerUrl;
+
     @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
     int httpPort;
 
@@ -36,6 +39,7 @@ public class ConfigResource {
         cfg.put("application.version", appVersion);
         cfg.put("http.port", httpPort);
         cfg.put("namespace", namespace);
+        cfg.put("api-server-url", apiServerUrl);
         cfg.put("runtime", Map.of(
                 "java.version", System.getProperty("java.version", "unknown"),
                 "java.vendor", System.getProperty("java.vendor", "unknown"),

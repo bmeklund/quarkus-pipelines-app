@@ -6,16 +6,14 @@ import {
   GridItem,
   Card,
   CardBody,
-  Button,
   Spinner,
   Alert,
   Bullseye,
   EmptyState,
   EmptyStateBody,
-  Split,
-  SplitItem,
   Flex,
   FlexItem,
+  Label,
 } from '@patternfly/react-core'
 import {
   CheckCircleIcon,
@@ -23,6 +21,8 @@ import {
   SyncAltIcon,
   TasksIcon,
   BanIcon,
+  ServerIcon,
+  LayerGroupIcon,
 } from '@patternfly/react-icons'
 import { api } from '../api/client'
 import PipelineStatusCard from '../components/PipelineStatusCard'
@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [allRuns, setAllRuns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [config, setConfig] = useState(null)
   const fetchingRef = useRef(false)
 
   const fetchData = async () => {
@@ -52,6 +53,7 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    api.getConfig().then(setConfig).catch(() => {})
     fetchData()
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
@@ -70,19 +72,36 @@ export default function Dashboard() {
   return (
     <>
       <PageSection variant="light">
-        <Split hasGutter>
-          <SplitItem flex={{ default: 'flex_1' }}>
-            <Title headingLevel="h1" size="2xl">Pipeline Dashboard</Title>
-            <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px' }}>
-              Overview of OpenShift Pipeline activity in <strong>{NAMESPACE}</strong>
-            </p>
-          </SplitItem>
-          <SplitItem>
-            <Button variant="primary" icon={<SyncAltIcon />} onClick={fetchData} isLoading={loading}>
-              Refresh
-            </Button>
-          </SplitItem>
-        </Split>
+        <Title headingLevel="h1" size="2xl" style={{ marginBottom: '16px' }}>Pipeline Dashboard</Title>
+        <Card style={{ border: '1px solid #4695EB', borderRadius: '8px' }}>
+          <CardBody>
+            <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapLg' }}>
+              <FlexItem>
+                <Label color="green" icon={<CheckCircleIcon />}>Connected</Label>
+              </FlexItem>
+              <FlexItem>
+                <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+                  <FlexItem><LayerGroupIcon style={{ color: '#4695EB' }} /></FlexItem>
+                  <FlexItem>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>Namespace</span>
+                    <div style={{ fontWeight: 700 }}>{config?.namespace || NAMESPACE}</div>
+                  </FlexItem>
+                </Flex>
+              </FlexItem>
+              {config?.['api-server-url'] && (
+                <FlexItem>
+                  <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+                    <FlexItem><ServerIcon style={{ color: '#4695EB' }} /></FlexItem>
+                    <FlexItem>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>API Server</span>
+                      <div style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{config['api-server-url']}</div>
+                    </FlexItem>
+                  </Flex>
+                </FlexItem>
+              )}
+            </Flex>
+          </CardBody>
+        </Card>
       </PageSection>
 
       {error && (
@@ -106,7 +125,7 @@ export default function Dashboard() {
             <StatCard title="Failed" value={stats.failed} icon={<TimesCircleIcon />} color="#C9190B" />
           </FlexItem>
           <FlexItem flex={{ default: 'flex_1' }}>
-            <StatCard title="Running" value={stats.running} icon={<SyncAltIcon />} color="#0066CC" />
+            <StatCard title="Running" value={stats.running} icon={<SyncAltIcon />} color="#4695EB" />
           </FlexItem>
         </Flex>
       </PageSection>

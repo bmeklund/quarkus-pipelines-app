@@ -15,6 +15,9 @@ async function fetchJson(url, options = {}) {
 
 // Pipeline Runs
 export const api = {
+  listPipelines: (namespace) =>
+    fetchJson(`${BASE}/pipelineruns/${encodeURIComponent(namespace)}/pipelines`),
+
   listPipelineRuns: (namespace) =>
     fetchJson(`${BASE}/pipelineruns/${encodeURIComponent(namespace)}`),
 

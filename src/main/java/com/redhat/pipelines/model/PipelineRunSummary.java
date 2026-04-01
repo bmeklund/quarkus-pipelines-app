@@ -25,7 +25,8 @@ public record PipelineRunSummary(
         String pacSender,
         String pacEventType,
         String pacRepository,
-        String pacShaTitle
+        String pacShaTitle,
+        String managedBy
 ) {
 
     public static final String STATUS_RUNNING = "Running";

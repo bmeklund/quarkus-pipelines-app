@@ -110,6 +110,14 @@ export default function PipelineRunDetailPage() {
                         <Label isCompact variant="outline">{run.triggerType || 'manual'}</Label>
                       </DescriptionListDescription>
                     </DescriptionListGroup>
+                    {run.managedBy && (
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>Managed by</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          <Label isCompact variant="outline" color="blue">{run.managedBy}</Label>
+                        </DescriptionListDescription>
+                      </DescriptionListGroup>
+                    )}
                     {(run.startedBy || run.pacSender || run.triggerType !== 'manual') && (
                       <DescriptionListGroup>
                         <DescriptionListTerm>Started by</DescriptionListTerm>

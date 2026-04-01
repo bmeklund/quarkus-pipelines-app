@@ -31,6 +31,13 @@ public class PipelineRunResource {
     }
 
     @GET
+    @Path("/{namespace}/pipelines")
+    @Operation(summary = "List available Pipelines in a namespace")
+    public List<String> listPipelines(@PathParam("namespace") String namespace) {
+        return pipelineRunService.listPipelines(namespace);
+    }
+
+    @GET
     @Path("/{namespace}")
     @Operation(summary = "List all PipelineRuns in a namespace")
     public List<PipelineRunSummary> listPipelineRuns(@PathParam("namespace") String namespace) {
@@ -58,8 +65,8 @@ public class PipelineRunResource {
                 request.pipelineName(),
                 namespace,
                 request.params(),
-                request.gitRevision(),
-                request.gitUrl());
+                request.workspaceName(),
+                request.workspaceStorageSize());
         return pipelineRunService.triggerPipelineRun(effectiveRequest)
                 .map(run -> Response.status(Response.Status.CREATED).entity(run).build())
                 .orElse(Response.status(Response.Status.INTERNAL_SERVER_ERROR)

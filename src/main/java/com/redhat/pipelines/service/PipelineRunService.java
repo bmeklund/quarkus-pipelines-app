@@ -24,6 +24,22 @@ public class PipelineRunService {
     @Inject
     TektonClient tektonClient;
 
+    public List<String> listPipelines(String namespace) {
+        try {
+            return tektonClient.v1().pipelines()
+                    .inNamespace(namespace)
+                    .list()
+                    .getItems()
+                    .stream()
+                    .map(p -> p.getMetadata().getName())
+                    .sorted()
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            LOG.warnf("Failed to list Pipelines in namespace %s: %s", namespace, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
     public List<PipelineRunSummary> listPipelineRuns(String namespace) {
         LOG.infof("listPipelineRuns() called for namespace: %s", namespace);
         try {
@@ -67,16 +83,8 @@ public class PipelineRunService {
                                 .withNewValue(v)
                                 .build()));
             }
-            if (request.gitRevision() != null) {
-                paramsBuilder.add(new io.fabric8.tekton.pipeline.v1.ParamBuilder()
-                        .withName("revision").withNewValue(request.gitRevision()).build());
-            }
-            if (request.gitUrl() != null) {
-                paramsBuilder.add(new io.fabric8.tekton.pipeline.v1.ParamBuilder()
-                        .withName("url").withNewValue(request.gitUrl()).build());
-            }
 
-            var pipelineRun = new PipelineRunBuilder()
+            var specBuilder = new PipelineRunBuilder()
                     .withNewMetadata()
                         .withGenerateName(request.pipelineName() + "-run-")
                         .withNamespace(request.namespace())
@@ -84,9 +92,29 @@ public class PipelineRunService {
                     .endMetadata()
                     .withNewSpec()
                         .withNewPipelineRef().withName(request.pipelineName()).endPipelineRef()
-                        .withParams(paramsBuilder)
-                    .endSpec()
-                    .build();
+                        .withParams(paramsBuilder);
+
+            // Attach workspace with VolumeClaimTemplate if requested
+            if (request.workspaceName() != null && !request.workspaceName().isBlank()) {
+                String storageSize = (request.workspaceStorageSize() != null && !request.workspaceStorageSize().isBlank())
+                        ? request.workspaceStorageSize() : "1Gi";
+                specBuilder.addNewWorkspace()
+                        .withName(request.workspaceName())
+                        .withNewVolumeClaimTemplate()
+                            .withNewSpec()
+                                .withAccessModes("ReadWriteOnce")
+                                .withNewResources()
+                                    .addToRequests("storage",
+                                        new io.fabric8.kubernetes.api.model.QuantityBuilder()
+                                            .withAmount(storageSize)
+                                            .build())
+                                .endResources()
+                            .endSpec()
+                        .endVolumeClaimTemplate()
+                        .endWorkspace();
+            }
+
+            var pipelineRun = specBuilder.endSpec().build();
 
             var created = tektonClient.v1().pipelineRuns()
                     .inNamespace(request.namespace())
@@ -155,6 +183,7 @@ public class PipelineRunService {
         String triggerType = labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
         String triggerName = labels.getOrDefault("triggers.tekton.dev/trigger", null);
         String startedBy = annotations.getOrDefault("pipeline.openshift.io/started-by", null);
+        String managedBy = labels.getOrDefault("app.kubernetes.io/managed-by", null);
 
         return new PipelineRunSummary(
                 meta.getName(),
@@ -175,7 +204,8 @@ public class PipelineRunService {
                 pacSender,
                 pacEventType,
                 pacRepository,
-                pacShaTitle
+                pacShaTitle,
+                managedBy
         );
     }
 
@@ -231,6 +261,7 @@ public class PipelineRunService {
         String triggerType = labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
         String triggerName = labels.getOrDefault("triggers.tekton.dev/trigger", null);
         String startedBy = annotations.getOrDefault("pipeline.openshift.io/started-by", null);
+        String managedBy = labels.getOrDefault("app.kubernetes.io/managed-by", null);
 
         return new PipelineRunSummary(
                 meta.getName(),
@@ -251,7 +282,8 @@ public class PipelineRunService {
                 pacSender,
                 pacEventType,
                 pacRepository,
-                pacShaTitle
+                pacShaTitle,
+                managedBy
         );
     }
 

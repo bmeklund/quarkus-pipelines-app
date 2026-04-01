@@ -14,6 +14,8 @@ import {
   Form,
   FormGroup,
   TextInput,
+  FormSelect,
+  FormSelectOption,
   Bullseye,
   EmptyState,
   EmptyStateBody,
@@ -62,8 +64,11 @@ export default function PipelinesPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [triggerModal, setTriggerModal] = useState(false)
-  const [triggerForm, setTriggerForm] = useState({ pipelineName: '', gitRevision: 'main', gitUrl: '' })
+  const [triggerForm, setTriggerForm] = useState({ pipelineName: '', appName: '', appVersion: '', workspaceName: 'shared-data', workspaceStorageSize: '1Gi' })
   const [triggering, setTriggering] = useState(false)
+  const [triggerError, setTriggerError] = useState(null)
+  const [pipelines, setPipelines] = useState([])
+  const [pipelinesLoading, setPipelinesLoading] = useState(false)
 
   const fetchRuns = async () => {
     try {
@@ -80,20 +85,49 @@ export default function PipelinesPage() {
 
   useEffect(() => { fetchRuns() }, [])
 
-  const handleTrigger = async () => {
-    setTriggering(true)
+  const openTriggerModal = async () => {
+    setTriggerForm({ pipelineName: '', appName: '', appVersion: '', workspaceName: 'shared-data', workspaceStorageSize: '1Gi' })
+    setTriggerError(null)
+    setTriggerModal(true)
+    setPipelinesLoading(true)
     try {
+      const names = await api.listPipelines(NAMESPACE)
+      setPipelines(names)
+      if (names.length > 0) setTriggerForm((f) => ({ ...f, pipelineName: names[0] }))
+    } catch {
+      setPipelines([])
+    } finally {
+      setPipelinesLoading(false)
+    }
+  }
+
+  const closeTriggerModal = () => {
+    setTriggerModal(false)
+    setTriggerError(null)
+  }
+
+  const handleTrigger = async () => {
+    if (!triggerForm.pipelineName) {
+      setTriggerError('Pipeline name is required.')
+      return
+    }
+    setTriggering(true)
+    setTriggerError(null)
+    try {
+      const params = {}
+      if (triggerForm.appName) params['application-name'] = triggerForm.appName
+      if (triggerForm.appVersion) params['application-version'] = triggerForm.appVersion
       await api.triggerPipelineRun(NAMESPACE, {
         pipelineName: triggerForm.pipelineName,
         namespace: NAMESPACE,
-        gitRevision: triggerForm.gitRevision || undefined,
-        gitUrl: triggerForm.gitUrl || undefined,
+        params,
+        workspaceName: triggerForm.workspaceName || undefined,
+        workspaceStorageSize: triggerForm.workspaceStorageSize || undefined,
       })
-      setTriggerModal(false)
-      setTriggerForm({ pipelineName: '', gitRevision: 'main', gitUrl: '' })
+      closeTriggerModal()
       await fetchRuns()
     } catch (e) {
-      setError(e.message)
+      setTriggerError(e.message)
     } finally {
       setTriggering(false)
     }
@@ -125,7 +159,7 @@ export default function PipelinesPage() {
               </Button>
             </ToolbarItem>
             <ToolbarItem align={{ default: 'alignRight' }}>
-              <Button variant="primary" icon={<PlayIcon />} onClick={() => setTriggerModal(true)} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
+              <Button variant="primary" icon={<PlayIcon />} onClick={openTriggerModal} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
                 Trigger Run
               </Button>
             </ToolbarItem>
@@ -171,45 +205,76 @@ export default function PipelinesPage() {
       </PageSection>
 
       <Modal
-        variant={ModalVariant.medium}
+        variant={ModalVariant.large}
         title="Trigger Pipeline Run"
         isOpen={triggerModal}
-        onClose={() => setTriggerModal(false)}
-        actions={[
-          <Button key="trigger" variant="primary" onClick={handleTrigger} isLoading={triggering} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
-            Trigger
-          </Button>,
-          <Button key="cancel" variant="link" onClick={() => setTriggerModal(false)}>
-            Cancel
-          </Button>,
-        ]}
+        onClose={closeTriggerModal}
       >
+        <div style={{ padding: '16px 24px' }}>
+        {triggerError && <Alert variant="danger" title={triggerError} isInline style={{ marginBottom: '16px' }} />}
         <Form>
-          <FormGroup label="Pipeline Name" fieldId="pipeline-name" isRequired>
+          <FormGroup label="Pipeline" fieldId="pipeline-name" isRequired>
+            {pipelinesLoading ? (
+              <Spinner size="sm" />
+            ) : pipelines.length > 0 ? (
+              <FormSelect
+                id="pipeline-name"
+                value={triggerForm.pipelineName}
+                onChange={(_, v) => setTriggerForm((f) => ({ ...f, pipelineName: v }))}
+              >
+                {pipelines.map((p) => (
+                  <FormSelectOption key={p} value={p} label={p} />
+                ))}
+              </FormSelect>
+            ) : (
+              <TextInput
+                id="pipeline-name"
+                value={triggerForm.pipelineName}
+                onChange={(_, v) => setTriggerForm((f) => ({ ...f, pipelineName: v }))}
+                placeholder="e.g. build-and-deploy"
+              />
+            )}
+          </FormGroup>
+          <FormGroup label="Application Name" fieldId="app-name">
             <TextInput
-              id="pipeline-name"
-              value={triggerForm.pipelineName}
-              onChange={(_, v) => setTriggerForm((f) => ({ ...f, pipelineName: v }))}
-              placeholder="e.g. build-and-deploy"
+              id="app-name"
+              value={triggerForm.appName}
+              onChange={(_, v) => setTriggerForm((f) => ({ ...f, appName: v }))}
+              placeholder="e.g. my-app"
             />
           </FormGroup>
-          <FormGroup label="Git Revision" fieldId="git-revision">
+          <FormGroup label="Application Version" fieldId="app-version">
             <TextInput
-              id="git-revision"
-              value={triggerForm.gitRevision}
-              onChange={(_, v) => setTriggerForm((f) => ({ ...f, gitRevision: v }))}
-              placeholder="main"
+              id="app-version"
+              value={triggerForm.appVersion}
+              onChange={(_, v) => setTriggerForm((f) => ({ ...f, appVersion: v }))}
+              placeholder="e.g. 1.0.0"
             />
           </FormGroup>
-          <FormGroup label="Git URL" fieldId="git-url">
+          <FormGroup label="Workspace Name" fieldId="workspace-name" helperText="Name of the workspace defined in the pipeline">
             <TextInput
-              id="git-url"
-              value={triggerForm.gitUrl}
-              onChange={(_, v) => setTriggerForm((f) => ({ ...f, gitUrl: v }))}
-              placeholder="https://github.com/org/repo.git"
+              id="workspace-name"
+              value={triggerForm.workspaceName}
+              onChange={(_, v) => setTriggerForm((f) => ({ ...f, workspaceName: v }))}
             />
           </FormGroup>
+          <FormGroup label="Workspace Storage Size" fieldId="workspace-storage" helperText="VolumeClaimTemplate size — e.g. 1Gi, 500Mi">
+            <TextInput
+              id="workspace-storage"
+              value={triggerForm.workspaceStorageSize}
+              onChange={(_, v) => setTriggerForm((f) => ({ ...f, workspaceStorageSize: v }))}
+            />
+          </FormGroup>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
+            <Button variant="primary" onClick={handleTrigger} isLoading={triggering} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
+              Start Pipeline Run
+            </Button>
+            <Button variant="link" onClick={closeTriggerModal}>
+              Cancel
+            </Button>
+          </div>
         </Form>
+        </div>
       </Modal>
     </>
   )

@@ -9,6 +9,6 @@ public record TriggerRequest(
         String pipelineName,
         String namespace,
         Map<String, String> params,
-        String gitRevision,
-        String gitUrl
+        String workspaceName,
+        String workspaceStorageSize
 ) {}

@@ -46,7 +46,7 @@ export default function HealthPage() {
 
   useEffect(() => {
     fetchHealth()
-    const interval = setInterval(fetchHealth, 15000)
+    const interval = setInterval(fetchHealth, 120000)
     return () => clearInterval(interval)
   }, [])
 
@@ -63,7 +63,7 @@ export default function HealthPage() {
             </Title>
             {lastChecked && (
               <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px', fontSize: '0.85rem' }}>
-                Last checked: {lastChecked} — auto-refreshes every 15s
+                Last checked: {lastChecked} — auto-refreshes every 2m
               </p>
             )}
           </SplitItem>

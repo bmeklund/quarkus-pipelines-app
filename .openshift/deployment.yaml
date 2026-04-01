@@ -80,6 +80,10 @@ spec:
           env:
             - name: QUARKUS_HTTP_PORT
               value: "8080"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: APP_PIPELINES_NAMESPACES
               valueFrom:
                 configMapKeyRef:

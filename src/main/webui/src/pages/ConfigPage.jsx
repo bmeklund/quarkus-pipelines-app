@@ -77,7 +77,7 @@ export default function ConfigPage() {
           <Grid hasGutter>
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle>Application</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Application</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     <DescriptionListGroup>
@@ -103,24 +103,22 @@ export default function ConfigPage() {
 
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle>Pipelines</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Pipelines</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     <DescriptionListGroup>
-                      <DescriptionListTerm>Namespaces</DescriptionListTerm>
+                      <DescriptionListTerm>Active Namespace</DescriptionListTerm>
                       <DescriptionListDescription>
-                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                          {(config.pipelines?.namespaces || []).map((ns) => (
-                            <Label key={ns} isCompact color="blue">{ns}</Label>
-                          ))}
-                        </div>
+                        <Label isCompact color="blue">{config.namespace}</Label>
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>
-                      <DescriptionListTerm>Watch Interval</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        {config.pipelines?.['watch-interval']}
-                      </DescriptionListDescription>
+                      <DescriptionListTerm>Dashboard Refresh</DescriptionListTerm>
+                      <DescriptionListDescription>30s</DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Pipelines Page Refresh</DescriptionListTerm>
+                      <DescriptionListDescription>manual only</DescriptionListDescription>
                     </DescriptionListGroup>
                   </DescriptionList>
                 </CardBody>
@@ -129,7 +127,7 @@ export default function ConfigPage() {
 
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle>OpenTelemetry</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>OpenTelemetry</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     <DescriptionListGroup>
@@ -155,7 +153,7 @@ export default function ConfigPage() {
 
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle>Runtime</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Runtime</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     {config.runtime && Object.entries(config.runtime).map(([k, v]) => (

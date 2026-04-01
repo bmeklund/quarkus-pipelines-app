@@ -141,11 +141,20 @@ public class PipelineRunService {
 
         Map<String, String> labels = meta.getLabels() != null ? meta.getLabels() : Map.of();
         Map<String, String> annotations = meta.getAnnotations() != null ? meta.getAnnotations() : Map.of();
-        String gitCommit = annotations.getOrDefault("tekton.dev/git-commit",
-                labels.getOrDefault("git-commit", null));
-        String gitBranch = annotations.getOrDefault("tekton.dev/git-branch",
-                labels.getOrDefault("git-branch", null));
+        String pacSender = annotations.getOrDefault("pipelinesascode.tekton.dev/sender", null);
+        String pacEventType = annotations.getOrDefault("pipelinesascode.tekton.dev/event-type", null);
+        String pacRepository = annotations.getOrDefault("pipelinesascode.tekton.dev/repository", null);
+        String pacShaTitle = annotations.getOrDefault("pipelinesascode.tekton.dev/sha-title", null);
+        // PAC uses its own sha/branch annotations; fall back to standard tekton annotations
+        String gitCommit = annotations.getOrDefault("pipelinesascode.tekton.dev/sha",
+                annotations.getOrDefault("tekton.dev/git-commit",
+                        labels.getOrDefault("git-commit", null)));
+        String gitBranch = annotations.getOrDefault("pipelinesascode.tekton.dev/branch",
+                annotations.getOrDefault("tekton.dev/git-branch",
+                        labels.getOrDefault("git-branch", null)));
         String triggerType = labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
+        String triggerName = labels.getOrDefault("triggers.tekton.dev/trigger", null);
+        String startedBy = annotations.getOrDefault("pipeline.openshift.io/started-by", null);
 
         return new PipelineRunSummary(
                 meta.getName(),
@@ -160,7 +169,13 @@ public class PipelineRunService {
                 taskRunSummaries,
                 gitCommit,
                 gitBranch,
-                triggerType
+                triggerType,
+                triggerName,
+                startedBy,
+                pacSender,
+                pacEventType,
+                pacRepository,
+                pacShaTitle
         );
     }
 
@@ -202,11 +217,20 @@ public class PipelineRunService {
 
         Map<String, String> labels = meta.getLabels() != null ? meta.getLabels() : Map.of();
         Map<String, String> annotations = meta.getAnnotations() != null ? meta.getAnnotations() : Map.of();
-        String gitCommit = annotations.getOrDefault("tekton.dev/git-commit",
-                labels.getOrDefault("git-commit", null));
-        String gitBranch = annotations.getOrDefault("tekton.dev/git-branch",
-                labels.getOrDefault("git-branch", null));
+        String pacSender = annotations.getOrDefault("pipelinesascode.tekton.dev/sender", null);
+        String pacEventType = annotations.getOrDefault("pipelinesascode.tekton.dev/event-type", null);
+        String pacRepository = annotations.getOrDefault("pipelinesascode.tekton.dev/repository", null);
+        String pacShaTitle = annotations.getOrDefault("pipelinesascode.tekton.dev/sha-title", null);
+        // PAC uses its own sha/branch annotations; fall back to standard tekton annotations
+        String gitCommit = annotations.getOrDefault("pipelinesascode.tekton.dev/sha",
+                annotations.getOrDefault("tekton.dev/git-commit",
+                        labels.getOrDefault("git-commit", null)));
+        String gitBranch = annotations.getOrDefault("pipelinesascode.tekton.dev/branch",
+                annotations.getOrDefault("tekton.dev/git-branch",
+                        labels.getOrDefault("git-branch", null)));
         String triggerType = labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
+        String triggerName = labels.getOrDefault("triggers.tekton.dev/trigger", null);
+        String startedBy = annotations.getOrDefault("pipeline.openshift.io/started-by", null);
 
         return new PipelineRunSummary(
                 meta.getName(),
@@ -221,7 +245,13 @@ public class PipelineRunService {
                 buildTaskRunSummariesWithFetch(pr),
                 gitCommit,
                 gitBranch,
-                triggerType
+                triggerType,
+                triggerName,
+                startedBy,
+                pacSender,
+                pacEventType,
+                pacRepository,
+                pacShaTitle
         );
     }
 

@@ -110,6 +110,24 @@ export default function PipelineRunDetailPage() {
                         <Label isCompact variant="outline">{run.triggerType || 'manual'}</Label>
                       </DescriptionListDescription>
                     </DescriptionListGroup>
+                    {(run.startedBy || run.pacSender || run.triggerType !== 'manual') && (
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>Started by</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          {run.pacSender
+                            ? `${run.pacSender} via Pipelines-as-Code${run.pacEventType ? ` (${run.pacEventType})` : ''}`
+                            : run.startedBy
+                              ? run.startedBy
+                              : `webhook${run.triggerName ? ` (${run.triggerName})` : run.triggerType ? ` (${run.triggerType})` : ''}`}
+                        </DescriptionListDescription>
+                      </DescriptionListGroup>
+                    )}
+                    {run.pacRepository && (
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>PAC Repository</DescriptionListTerm>
+                        <DescriptionListDescription>{run.pacRepository}</DescriptionListDescription>
+                      </DescriptionListGroup>
+                    )}
                     <DescriptionListGroup>
                       <DescriptionListTerm>Started</DescriptionListTerm>
                       <DescriptionListDescription>{formatTime(run.startTime)}</DescriptionListDescription>
@@ -138,7 +156,12 @@ export default function PipelineRunDetailPage() {
                       <DescriptionListGroup>
                         <DescriptionListTerm>Git Commit</DescriptionListTerm>
                         <DescriptionListDescription>
-                          <span style={{ fontFamily: 'monospace' }}>{run.gitCommit}</span>
+                          <span style={{ fontFamily: 'monospace' }}>{run.gitCommit.substring(0, 8)}</span>
+                          {run.pacShaTitle && (
+                            <span style={{ marginLeft: '8px', color: 'var(--pf-v6-global--Color--200)', fontSize: '0.85rem' }}>
+                              {run.pacShaTitle}
+                            </span>
+                          )}
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                     )}

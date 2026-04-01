@@ -19,7 +19,13 @@ public record PipelineRunSummary(
         List<TaskRunSummary> taskRuns,
         String gitCommit,
         String gitBranch,
-        String triggerType
+        String triggerType,
+        String triggerName,
+        String startedBy,
+        String pacSender,
+        String pacEventType,
+        String pacRepository,
+        String pacShaTitle
 ) {
 
     public static final String STATUS_RUNNING = "Running";

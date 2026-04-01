@@ -22,6 +22,7 @@ public class PipelineConnectivityCheck implements HealthCheck {
             return HealthCheckResponse.named("openshift-connectivity")
                     .up()
                     .withData("namespace", kubernetesClient.getNamespace())
+                    .withData("api-url", kubernetesClient.getMasterUrl().toString())
                     .build();
         } catch (Exception e) {
             Throwable root = e;

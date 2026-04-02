@@ -14,15 +14,18 @@ import org.jboss.logging.Logger;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PipelineRunService {
 
     private static final Logger LOG = Logger.getLogger(PipelineRunService.class);
 
+    private final TektonClient tektonClient;
+
     @Inject
-    TektonClient tektonClient;
+    public PipelineRunService(TektonClient tektonClient) {
+        this.tektonClient = tektonClient;
+    }
 
     public List<String> listPipelines(String namespace) {
         try {
@@ -33,7 +36,7 @@ public class PipelineRunService {
                     .stream()
                     .map(p -> p.getMetadata().getName())
                     .sorted()
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (Exception e) {
             LOG.warnf("Failed to list Pipelines in namespace %s: %s", namespace, e.getMessage());
             return Collections.emptyList();
@@ -53,7 +56,7 @@ public class PipelineRunService {
                     .sorted(Comparator.comparing(
                             s -> s.startTime() != null ? s.startTime() : Instant.EPOCH,
                             Comparator.reverseOrder()))
-                    .collect(Collectors.toList());
+                    .toList();
         } catch (Exception e) {
             LOG.warnf("Failed to list PipelineRuns in namespace %s: %s", namespace, e.getMessage());
             return Collections.emptyList();
@@ -129,13 +132,23 @@ public class PipelineRunService {
         }
     }
 
-    private PipelineRunSummary toSummary(PipelineRun pr) {
+    private record RunFields(
+            String name, String namespace, String pipelineName, String runStatus,
+            String reason, String message, Instant startTime, Instant completionTime,
+            Long duration, String gitCommit, String gitBranch, String triggerType,
+            String triggerName, String startedBy, String pacSender, String pacEventType,
+            String repository, String repositoryUrl, String pacShaTitle, String managedBy
+    ) {}
+
+    private RunFields extractRunFields(PipelineRun pr) {
         var meta = pr.getMetadata();
         var spec = pr.getSpec();
         var status = pr.getStatus();
 
-        String pipelineName = spec != null && spec.getPipelineRef() != null
-                ? spec.getPipelineRef().getName() : "unknown";
+        Map<String, String> labels = meta.getLabels() != null ? meta.getLabels() : Map.of();
+        String pipelineName = (spec != null && spec.getPipelineRef() != null && spec.getPipelineRef().getName() != null)
+                ? spec.getPipelineRef().getName()
+                : labels.getOrDefault("tekton.dev/pipeline", "unknown");
 
         String runStatus = resolveStatus(pr);
         String reason = null;
@@ -165,13 +178,11 @@ public class PipelineRunService {
             duration = Instant.now().getEpochSecond() - startTime.getEpochSecond();
         }
 
-        List<TaskRunSummary> taskRunSummaries = buildTaskRunSummaries(pr);
-
-        Map<String, String> labels = meta.getLabels() != null ? meta.getLabels() : Map.of();
         Map<String, String> annotations = meta.getAnnotations() != null ? meta.getAnnotations() : Map.of();
         String pacSender = annotations.getOrDefault("pipelinesascode.tekton.dev/sender", null);
         String pacEventType = annotations.getOrDefault("pipelinesascode.tekton.dev/event-type", null);
-        String pacRepository = annotations.getOrDefault("pipelinesascode.tekton.dev/repository", null);
+        String repository = annotations.getOrDefault("pipelinesascode.tekton.dev/repository", null);
+        String repositoryUrl = annotations.getOrDefault("pipelinesascode.tekton.dev/repo-url", null);
         String pacShaTitle = annotations.getOrDefault("pipelinesascode.tekton.dev/sha-title", null);
         // PAC uses its own sha/branch annotations; fall back to standard tekton annotations
         String gitCommit = annotations.getOrDefault("pipelinesascode.tekton.dev/sha",
@@ -180,111 +191,35 @@ public class PipelineRunService {
         String gitBranch = annotations.getOrDefault("pipelinesascode.tekton.dev/branch",
                 annotations.getOrDefault("tekton.dev/git-branch",
                         labels.getOrDefault("git-branch", null)));
-        String triggerType = labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
+        String triggerType = (pacSender != null || pacEventType != null)
+                ? "pac"
+                : labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
         String triggerName = labels.getOrDefault("triggers.tekton.dev/trigger", null);
         String startedBy = annotations.getOrDefault("pipeline.openshift.io/started-by", null);
         String managedBy = labels.getOrDefault("app.kubernetes.io/managed-by", null);
 
-        return new PipelineRunSummary(
-                meta.getName(),
-                meta.getNamespace(),
-                pipelineName,
-                runStatus,
-                reason,
-                message,
-                startTime,
-                completionTime,
-                duration,
-                taskRunSummaries,
-                gitCommit,
-                gitBranch,
-                triggerType,
-                triggerName,
-                startedBy,
-                pacSender,
-                pacEventType,
-                pacRepository,
-                pacShaTitle,
-                managedBy
-        );
+        return new RunFields(meta.getName(), meta.getNamespace(), pipelineName, runStatus,
+                reason, message, startTime, completionTime, duration,
+                gitCommit, gitBranch, triggerType, triggerName, startedBy,
+                pacSender, pacEventType, repository, repositoryUrl, pacShaTitle, managedBy);
+    }
+
+    private PipelineRunSummary toSummary(PipelineRun pr) {
+        var f = extractRunFields(pr);
+        return new PipelineRunSummary(f.name(), f.namespace(), f.pipelineName(), f.runStatus(),
+                f.reason(), f.message(), f.startTime(), f.completionTime(), f.duration(),
+                buildTaskRunSummaries(pr),
+                f.gitCommit(), f.gitBranch(), f.triggerType(), f.triggerName(), f.startedBy(),
+                f.pacSender(), f.pacEventType(), f.repository(), f.repositoryUrl(), f.pacShaTitle(), f.managedBy());
     }
 
     private PipelineRunSummary toSummaryWithDetails(PipelineRun pr) {
-        var meta = pr.getMetadata();
-        var spec = pr.getSpec();
-        var status = pr.getStatus();
-
-        String pipelineName = spec != null && spec.getPipelineRef() != null
-                ? spec.getPipelineRef().getName() : "unknown";
-
-        String runStatus = resolveStatus(pr);
-        String reason = null;
-        String message = null;
-        Instant startTime = null;
-        Instant completionTime = null;
-
-        if (status != null) {
-            var conditions = status.getConditions();
-            if (conditions != null && !conditions.isEmpty()) {
-                var cond = conditions.get(0);
-                reason = cond.getReason();
-                message = cond.getMessage();
-            }
-            if (status.getStartTime() != null) {
-                startTime = ZonedDateTime.parse(status.getStartTime()).toInstant();
-            }
-            if (status.getCompletionTime() != null) {
-                completionTime = ZonedDateTime.parse(status.getCompletionTime()).toInstant();
-            }
-        }
-
-        Long duration = null;
-        if (startTime != null && completionTime != null) {
-            duration = completionTime.getEpochSecond() - startTime.getEpochSecond();
-        } else if (startTime != null && PipelineRunSummary.STATUS_RUNNING.equals(runStatus)) {
-            duration = Instant.now().getEpochSecond() - startTime.getEpochSecond();
-        }
-
-        Map<String, String> labels = meta.getLabels() != null ? meta.getLabels() : Map.of();
-        Map<String, String> annotations = meta.getAnnotations() != null ? meta.getAnnotations() : Map.of();
-        String pacSender = annotations.getOrDefault("pipelinesascode.tekton.dev/sender", null);
-        String pacEventType = annotations.getOrDefault("pipelinesascode.tekton.dev/event-type", null);
-        String pacRepository = annotations.getOrDefault("pipelinesascode.tekton.dev/repository", null);
-        String pacShaTitle = annotations.getOrDefault("pipelinesascode.tekton.dev/sha-title", null);
-        // PAC uses its own sha/branch annotations; fall back to standard tekton annotations
-        String gitCommit = annotations.getOrDefault("pipelinesascode.tekton.dev/sha",
-                annotations.getOrDefault("tekton.dev/git-commit",
-                        labels.getOrDefault("git-commit", null)));
-        String gitBranch = annotations.getOrDefault("pipelinesascode.tekton.dev/branch",
-                annotations.getOrDefault("tekton.dev/git-branch",
-                        labels.getOrDefault("git-branch", null)));
-        String triggerType = labels.getOrDefault("triggers.tekton.dev/eventlistener", "manual");
-        String triggerName = labels.getOrDefault("triggers.tekton.dev/trigger", null);
-        String startedBy = annotations.getOrDefault("pipeline.openshift.io/started-by", null);
-        String managedBy = labels.getOrDefault("app.kubernetes.io/managed-by", null);
-
-        return new PipelineRunSummary(
-                meta.getName(),
-                meta.getNamespace(),
-                pipelineName,
-                runStatus,
-                reason,
-                message,
-                startTime,
-                completionTime,
-                duration,
+        var f = extractRunFields(pr);
+        return new PipelineRunSummary(f.name(), f.namespace(), f.pipelineName(), f.runStatus(),
+                f.reason(), f.message(), f.startTime(), f.completionTime(), f.duration(),
                 buildTaskRunSummariesWithFetch(pr),
-                gitCommit,
-                gitBranch,
-                triggerType,
-                triggerName,
-                startedBy,
-                pacSender,
-                pacEventType,
-                pacRepository,
-                pacShaTitle,
-                managedBy
-        );
+                f.gitCommit(), f.gitBranch(), f.triggerType(), f.triggerName(), f.startedBy(),
+                f.pacSender(), f.pacEventType(), f.repository(), f.repositoryUrl(), f.pacShaTitle(), f.managedBy());
     }
 
     private List<TaskRunSummary> buildTaskRunSummariesWithFetch(PipelineRun pr) {
@@ -335,7 +270,7 @@ public class PipelineRunService {
                                 "Unknown", null, null, null, null, null, null);
                     }
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<TaskRunSummary> buildTaskRunSummaries(PipelineRun pr) {
@@ -350,7 +285,7 @@ public class PipelineRunService {
                         ref.getName(),
                         ref.getPipelineTaskName(),
                         "Unknown", null, null, null, null, null, null))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String resolveStatus(PipelineRun pr) {

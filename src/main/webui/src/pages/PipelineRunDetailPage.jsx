@@ -104,20 +104,25 @@ export default function PipelineRunDetailPage() {
                         <Label color={STATUS_COLOR[run.status] || 'grey'} isCompact>{run.status}</Label>
                       </DescriptionListDescription>
                     </DescriptionListGroup>
+                    {run.reason && (
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>Reason</DescriptionListTerm>
+                        <DescriptionListDescription>{run.reason}</DescriptionListDescription>
+                      </DescriptionListGroup>
+                    )}
                     <DescriptionListGroup>
                       <DescriptionListTerm>Trigger</DescriptionListTerm>
                       <DescriptionListDescription>
                         <Label isCompact variant="outline">{run.triggerType || 'manual'}</Label>
+                        {run.pacEventType && (
+                          <Label isCompact variant="outline" color="blue" style={{ marginLeft: '8px' }}>{run.pacEventType}</Label>
+                        )}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
-                    {run.managedBy && (
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>Managed by</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          <Label isCompact variant="outline" color="blue">{run.managedBy}</Label>
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                    )}
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Started</DescriptionListTerm>
+                      <DescriptionListDescription>{formatTime(run.startTime)}</DescriptionListDescription>
+                    </DescriptionListGroup>
                     {(run.startedBy || run.pacSender || run.triggerType !== 'manual') && (
                       <DescriptionListGroup>
                         <DescriptionListTerm>Started by</DescriptionListTerm>
@@ -130,16 +135,14 @@ export default function PipelineRunDetailPage() {
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                     )}
-                    {run.pacRepository && (
+                    {run.managedBy && (
                       <DescriptionListGroup>
-                        <DescriptionListTerm>PAC Repository</DescriptionListTerm>
-                        <DescriptionListDescription>{run.pacRepository}</DescriptionListDescription>
+                        <DescriptionListTerm>Managed by</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          <Label isCompact variant="outline" color="blue">{run.managedBy}</Label>
+                        </DescriptionListDescription>
                       </DescriptionListGroup>
                     )}
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>Started</DescriptionListTerm>
-                      <DescriptionListDescription>{formatTime(run.startTime)}</DescriptionListDescription>
-                    </DescriptionListGroup>
                     <DescriptionListGroup>
                       <DescriptionListTerm>Completed</DescriptionListTerm>
                       <DescriptionListDescription>{formatTime(run.completionTime)}</DescriptionListDescription>
@@ -148,16 +151,16 @@ export default function PipelineRunDetailPage() {
                       <DescriptionListTerm>Duration</DescriptionListTerm>
                       <DescriptionListDescription>{formatDuration(run.durationSeconds)}</DescriptionListDescription>
                     </DescriptionListGroup>
-                    {run.reason && (
+                    {(run.repository || run.repositoryUrl) && (
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Reason</DescriptionListTerm>
-                        <DescriptionListDescription>{run.reason}</DescriptionListDescription>
-                      </DescriptionListGroup>
-                    )}
-                    {run.gitBranch && (
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>Git Branch</DescriptionListTerm>
-                        <DescriptionListDescription>{run.gitBranch}</DescriptionListDescription>
+                        <DescriptionListTerm>Repository</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          {run.repositoryUrl ? (
+                            <a href={run.repositoryUrl} target="_blank" rel="noopener noreferrer">
+                              {run.repository || run.repositoryUrl}
+                            </a>
+                          ) : run.repository}
+                        </DescriptionListDescription>
                       </DescriptionListGroup>
                     )}
                     {run.gitCommit && (
@@ -171,6 +174,12 @@ export default function PipelineRunDetailPage() {
                             </span>
                           )}
                         </DescriptionListDescription>
+                      </DescriptionListGroup>
+                    )}
+                    {run.gitBranch && (
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>Git Branch</DescriptionListTerm>
+                        <DescriptionListDescription>{run.gitBranch}</DescriptionListDescription>
                       </DescriptionListGroup>
                     )}
                   </DescriptionList>

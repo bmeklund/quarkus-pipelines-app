@@ -1,5 +1,7 @@
 package com.redhat.pipelines.resource;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -11,25 +13,31 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@ApplicationScoped
 @Path("/api/config")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Configuration", description = "Application configuration overview")
 public class ConfigResource {
 
-    @ConfigProperty(name = "quarkus.application.name")
-    String appName;
+    private final String appName;
+    private final String appVersion;
+    private final String namespace;
+    private final String apiServerUrl;
+    private final int httpPort;
 
-    @ConfigProperty(name = "quarkus.application.version", defaultValue = "unknown")
-    String appVersion;
-
-    @ConfigProperty(name = "quarkus.kubernetes-client.namespace", defaultValue = "default")
-    String namespace;
-
-    @ConfigProperty(name = "quarkus.kubernetes-client.api-server-url", defaultValue = "")
-    String apiServerUrl;
-
-    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
-    int httpPort;
+    @Inject
+    public ConfigResource(
+            @ConfigProperty(name = "quarkus.application.name") String appName,
+            @ConfigProperty(name = "quarkus.application.version", defaultValue = "unknown") String appVersion,
+            @ConfigProperty(name = "quarkus.kubernetes-client.namespace", defaultValue = "default") String namespace,
+            @ConfigProperty(name = "quarkus.kubernetes-client.api-server-url", defaultValue = "") String apiServerUrl,
+            @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080") int httpPort) {
+        this.appName = appName;
+        this.appVersion = appVersion;
+        this.namespace = namespace;
+        this.apiServerUrl = apiServerUrl;
+        this.httpPort = httpPort;
+    }
 
     @GET
     @Operation(summary = "Get application configuration (non-sensitive properties)")

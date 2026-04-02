@@ -1,0 +1,13 @@
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.20
+
+ENV LANGUAGE='en_US:en'
+
+# Self-contained uber-jar — all dependencies included
+COPY --chown=185 target/*-runner.jar /deployments/app.jar
+
+EXPOSE 8080
+USER 185
+ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/deployments/app.jar"
+
+ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]

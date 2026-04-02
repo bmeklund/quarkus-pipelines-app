@@ -4,6 +4,7 @@ import com.redhat.pipelines.model.PipelineRunSummary;
 import com.redhat.pipelines.model.TriggerRequest;
 import com.redhat.pipelines.service.PipelineRunService;
 import io.smallrye.common.annotation.Blocking;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -13,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.util.List;
 
+@ApplicationScoped
 @Blocking
 @Path("/api/pipelineruns")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,8 +22,12 @@ import java.util.List;
 @Tag(name = "Pipeline Runs", description = "OpenShift Pipelines management")
 public class PipelineRunResource {
 
+    private final PipelineRunService pipelineRunService;
+
     @Inject
-    PipelineRunService pipelineRunService;
+    public PipelineRunResource(PipelineRunService pipelineRunService) {
+        this.pipelineRunService = pipelineRunService;
+    }
 
     @GET
     @Path("/ping")

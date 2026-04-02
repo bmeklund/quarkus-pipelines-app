@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   Page,
   Masthead,
@@ -38,6 +38,7 @@ const navItems = [
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const location = useLocation()
+  const navigate = useNavigate()
 
   const masthead = (
     <Masthead style={{ backgroundColor: '#151515', position: 'relative' }}>
@@ -54,7 +55,7 @@ export default function App() {
           </PageToggleButton>
         </MastheadToggle>
         <MastheadBrand>
-          <img src={quarkusLogo} alt="Quarkus" style={{ height: '36px' }} />
+          <img src={quarkusLogo} alt="Quarkus" style={{ height: '36px', cursor: 'pointer' }} onClick={() => navigate('/')} />
         </MastheadBrand>
       </MastheadMain>
       <span style={{

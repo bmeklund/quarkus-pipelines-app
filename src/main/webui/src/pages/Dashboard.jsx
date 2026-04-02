@@ -26,23 +26,23 @@ import {
 } from '@patternfly/react-icons'
 import { api } from '../api/client'
 import PipelineStatusCard from '../components/PipelineStatusCard'
-
-const NAMESPACE = import.meta.env.VITE_NAMESPACE || 'bmeklund-dev'
+import { useAppConfig } from '../context/AppConfigContext'
 
 export default function Dashboard() {
+  const config = useAppConfig()
+  const namespace = config?.namespace
   const [allRuns, setAllRuns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [config, setConfig] = useState(null)
   const fetchingRef = useRef(false)
 
   const fetchData = async () => {
-    if (fetchingRef.current) return
+    if (!namespace || fetchingRef.current) return
     fetchingRef.current = true
     try {
       setLoading(true)
       setError(null)
-      const runs = await api.listPipelineRuns(NAMESPACE)
+      const runs = await api.listPipelineRuns(namespace)
       setAllRuns(runs)
     } catch (e) {
       setError(e.message)
@@ -53,11 +53,11 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    api.getConfig().then(setConfig).catch(() => {})
+    if (!namespace) return
     fetchData()
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [namespace])
 
   const stats = {
     total: allRuns.length,
@@ -84,7 +84,7 @@ export default function Dashboard() {
                   <FlexItem><LayerGroupIcon style={{ color: '#4695EB' }} /></FlexItem>
                   <FlexItem>
                     <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>Namespace</span>
-                    <div style={{ fontWeight: 700 }}>{config?.namespace || NAMESPACE}</div>
+                    <div style={{ fontWeight: 700 }}>{namespace}</div>
                   </FlexItem>
                 </Flex>
               </FlexItem>
@@ -136,7 +136,7 @@ export default function Dashboard() {
           <Bullseye><Spinner size="xl" /></Bullseye>
         ) : recentRuns.length === 0 ? (
           <EmptyState titleText="No pipeline runs found" headingLevel="h2" icon={TasksIcon}>
-            <EmptyStateBody>No pipeline runs found in &quot;{NAMESPACE}&quot;.</EmptyStateBody>
+            <EmptyStateBody>No pipeline runs found in &quot;{namespace}&quot;.</EmptyStateBody>
           </EmptyState>
         ) : (
           <Grid hasGutter>

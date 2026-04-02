@@ -35,8 +35,7 @@ import {
   TasksIcon,
 } from '@patternfly/react-icons'
 import { api } from '../api/client'
-
-const NAMESPACE = import.meta.env.VITE_NAMESPACE || 'bmeklund-dev'
+import { useAppConfig } from '../context/AppConfigContext'
 
 const STATUS_COLOR = {
   Running: 'blue',
@@ -60,6 +59,7 @@ function formatTime(iso) {
 
 export default function PipelinesPage() {
   const navigate = useNavigate()
+  const { namespace } = useAppConfig() ?? {}
   const [runs, setRuns] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -71,11 +71,12 @@ export default function PipelinesPage() {
   const [pipelinesLoading, setPipelinesLoading] = useState(false)
 
   const fetchRuns = async () => {
+    if (!namespace) return
     try {
       setLoading(true)
       setError(null)
-      const data = await api.listPipelineRuns(NAMESPACE)
-      setRuns(data)
+      const data = await api.listPipelineRuns(namespace)
+      setRuns([...data].sort((a, b) => new Date(b.startTime) - new Date(a.startTime)))
     } catch (e) {
       setError(e.message)
     } finally {
@@ -83,7 +84,7 @@ export default function PipelinesPage() {
     }
   }
 
-  useEffect(() => { fetchRuns() }, [])
+  useEffect(() => { fetchRuns() }, [namespace])
 
   const openTriggerModal = async () => {
     setTriggerForm({ pipelineName: '', appName: '', appVersion: '', workspaceName: 'shared-data', workspaceStorageSize: '1Gi' })
@@ -91,7 +92,7 @@ export default function PipelinesPage() {
     setTriggerModal(true)
     setPipelinesLoading(true)
     try {
-      const names = await api.listPipelines(NAMESPACE)
+      const names = await api.listPipelines(namespace)
       setPipelines(names)
       if (names.length > 0) setTriggerForm((f) => ({ ...f, pipelineName: names[0] }))
     } catch {
@@ -117,9 +118,9 @@ export default function PipelinesPage() {
       const params = {}
       if (triggerForm.appName) params['application-name'] = triggerForm.appName
       if (triggerForm.appVersion) params['application-version'] = triggerForm.appVersion
-      await api.triggerPipelineRun(NAMESPACE, {
+      await api.triggerPipelineRun(namespace, {
         pipelineName: triggerForm.pipelineName,
-        namespace: NAMESPACE,
+        namespace: namespace,
         params,
         workspaceName: triggerForm.workspaceName || undefined,
         workspaceStorageSize: triggerForm.workspaceStorageSize || undefined,
@@ -140,7 +141,7 @@ export default function PipelinesPage() {
       <PageSection variant="light">
         <Title headingLevel="h1" size="2xl">Pipeline Runs</Title>
         <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px' }}>
-          Namespace: <strong>{NAMESPACE}</strong>
+          Namespace: <strong>{namespace}</strong>
         </p>
       </PageSection>
 
@@ -170,7 +171,7 @@ export default function PipelinesPage() {
           <Bullseye style={{ padding: '48px' }}><Spinner size="xl" /></Bullseye>
         ) : runs.length === 0 ? (
           <EmptyState titleText="No pipeline runs" headingLevel="h2" icon={TasksIcon}>
-            <EmptyStateBody>No pipeline runs found in &quot;{NAMESPACE}&quot;.</EmptyStateBody>
+            <EmptyStateBody>No pipeline runs found in &quot;{namespace}&quot;.</EmptyStateBody>
           </EmptyState>
         ) : (
           <Table aria-label="Pipeline runs">

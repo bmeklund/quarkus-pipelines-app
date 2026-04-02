@@ -24,7 +24,8 @@ public record PipelineRunSummary(
         String startedBy,
         String pacSender,
         String pacEventType,
-        String pacRepository,
+        String repository,
+        String repositoryUrl,
         String pacShaTitle,
         String managedBy
 ) {

@@ -1,22 +1,36 @@
+##############################################################################
+# Quarkus Pipelines App — OpenShift Deployment
+#
+# Before applying, replace YOUR_NAMESPACE with the namespace you are
+# deploying into (e.g. tekton-workshop-user1). This namespace is used both
+# as the deployment target and as the Tekton namespace the app will monitor.
+#
+#   sed 's/YOUR_NAMESPACE/tekton-workshop-user1/g' deployment.yaml | oc apply -f -
+#
+# The ClusterRoleBinding grants the ServiceAccount cross-namespace read
+# access to Tekton resources. The subject namespace MUST match the namespace
+# where the ServiceAccount lives (i.e. the deployment namespace).
+##############################################################################
+
 ---
-# ServiceAccount with permissions to read PipelineRuns and TaskRuns
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: pipelines-dashboard
-  namespace: default
+  namespace: YOUR_NAMESPACE
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
     app.kubernetes.io/part-of: pipelines-dashboard
 
 ---
-# ClusterRole: read-only access to Tekton resources across namespaces
+# ClusterRole: read access to Tekton resources cluster-wide
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: pipelines-dashboard-viewer
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
 rules:
   - apiGroups: ["tekton.dev"]
     resources: ["pipelineruns", "taskruns", "pipelines", "tasks"]
@@ -29,27 +43,44 @@ rules:
     verbs: ["get", "list"]
 
 ---
+# IMPORTANT: subjects[].namespace must match the namespace the ServiceAccount is deployed in
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: pipelines-dashboard-viewer-binding
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
 subjects:
   - kind: ServiceAccount
     name: pipelines-dashboard
-    namespace: default
+    namespace: YOUR_NAMESPACE
 roleRef:
   kind: ClusterRole
   name: pipelines-dashboard-viewer
   apiGroup: rbac.authorization.k8s.io
 
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipelines-dashboard-config
+  namespace: YOUR_NAMESPACE
+  labels:
+    app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
+data:
+  # The Tekton namespace this dashboard instance monitors (passed to the app at runtime)
+  namespace: "YOUR_NAMESPACE"
+  # Optional: OpenTelemetry collector endpoint
+  otel-endpoint: "http://otel-collector:4317"
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: quarkus-pipelines-app
-  namespace: default
+  namespace: YOUR_NAMESPACE
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
     app.kubernetes.io/version: "1.0.0"
@@ -72,7 +103,15 @@ spec:
       serviceAccountName: pipelines-dashboard
       containers:
         - name: quarkus-pipelines-app
-          image: quarkus-pipelines/quarkus-pipelines-app:latest
+          # Build image with: IMAGE_REPO=quay.io/yourorg/quarkus-pipelines-app ./build.sh
+          image: quay.io/yourorg/quarkus-pipelines-app:latest
+          imagePullPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: 8080
@@ -84,11 +123,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: APP_PIPELINES_NAMESPACES
+            # Sets quarkus.kubernetes-client.namespace — the Tekton namespace to monitor
+            - name: QUARKUS_KUBERNETES_CLIENT_NAMESPACE
               valueFrom:
                 configMapKeyRef:
                   name: pipelines-dashboard-config
-                  key: namespaces
+                  key: namespace
             - name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
               valueFrom:
                 configMapKeyRef:
@@ -128,16 +168,17 @@ apiVersion: v1
 kind: Service
 metadata:
   name: quarkus-pipelines-app
-  namespace: default
+  namespace: YOUR_NAMESPACE
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
 spec:
   selector:
     app.kubernetes.io/name: quarkus-pipelines-app
   ports:
     - name: http
       port: 8080
-      targetPort: 8080
+      targetPort: http
       protocol: TCP
 
 ---
@@ -145,9 +186,10 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: quarkus-pipelines-app
-  namespace: default
+  namespace: YOUR_NAMESPACE
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
 spec:
   to:
     kind: Service
@@ -157,13 +199,3 @@ spec:
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: pipelines-dashboard-config
-  namespace: default
-data:
-  namespaces: "default"
-  otel-endpoint: "http://otel-collector:4317"

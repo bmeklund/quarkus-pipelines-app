@@ -13,8 +13,12 @@ public class TektonClientProducer {
 
     private static final Logger LOG = Logger.getLogger(TektonClientProducer.class);
 
+    private final KubernetesClient kubernetesClient;
+
     @Inject
-    KubernetesClient kubernetesClient;
+    public TektonClientProducer(KubernetesClient kubernetesClient) {
+        this.kubernetesClient = kubernetesClient;
+    }
 
     @Produces
     @ApplicationScoped

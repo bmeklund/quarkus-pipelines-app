@@ -67,6 +67,11 @@ public class PipelineRunResource {
     public Response triggerPipelineRun(
             @PathParam("namespace") String namespace,
             TriggerRequest request) {
+        if (request.pipelineName() == null || request.pipelineName().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"error\":\"pipelineName is required\"}")
+                    .build();
+        }
         var effectiveRequest = new TriggerRequest(
                 request.pipelineName(),
                 namespace,

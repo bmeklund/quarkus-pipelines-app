@@ -11,8 +11,12 @@ import org.eclipse.microprofile.health.Readiness;
 @ApplicationScoped
 public class PipelineConnectivityCheck implements HealthCheck {
 
+    private final KubernetesClient kubernetesClient;
+
     @Inject
-    KubernetesClient kubernetesClient;
+    public PipelineConnectivityCheck(KubernetesClient kubernetesClient) {
+        this.kubernetesClient = kubernetesClient;
+    }
 
     @Override
     public HealthCheckResponse call() {

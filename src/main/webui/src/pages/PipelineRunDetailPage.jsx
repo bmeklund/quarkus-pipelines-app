@@ -28,26 +28,7 @@ import {
 } from '@patternfly/react-table'
 import { ArrowLeftIcon } from '@patternfly/react-icons'
 import { api } from '../api/client'
-
-const STATUS_COLOR = {
-  Running: 'blue',
-  Succeeded: 'green',
-  Failed: 'red',
-  Cancelled: 'orange',
-  Pending: 'grey',
-  Unknown: 'grey',
-}
-
-function formatDuration(s) {
-  if (!s) return '—'
-  if (s < 60) return `${s}s`
-  return `${Math.floor(s / 60)}m ${s % 60}s`
-}
-
-function formatTime(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString()
-}
+import { STATUS_COLOR, formatDuration, formatTime } from '../utils'
 
 export default function PipelineRunDetailPage() {
   const { namespace, name } = useParams()

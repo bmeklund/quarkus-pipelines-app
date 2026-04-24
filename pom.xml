@@ -47,16 +47,6 @@
       <artifactId>quarkus-rest-jackson</artifactId>
     </dependency>
 
-    <!-- Qute templating -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-qute</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-qute</artifactId>
-    </dependency>
-
     <!-- Quinoa - SPA frontend -->
     <dependency>
       <groupId>io.quarkiverse.quinoa</groupId>
@@ -99,12 +89,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
-    </dependency>
-
-    <!-- Config -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-config-yaml</artifactId>
     </dependency>
 
     <!-- Test -->

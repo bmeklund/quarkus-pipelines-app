@@ -36,26 +36,7 @@ import {
 } from '@patternfly/react-icons'
 import { api } from '../api/client'
 import { useAppConfig } from '../context/AppConfigContext'
-
-const STATUS_COLOR = {
-  Running: 'blue',
-  Succeeded: 'green',
-  Failed: 'red',
-  Cancelled: 'orange',
-  Pending: 'grey',
-  Unknown: 'grey',
-}
-
-function formatDuration(s) {
-  if (!s) return '—'
-  if (s < 60) return `${s}s`
-  return `${Math.floor(s / 60)}m ${s % 60}s`
-}
-
-function formatTime(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString()
-}
+import { STATUS_COLOR, formatDuration, formatTime } from '../utils'
 
 export default function PipelinesPage() {
   const navigate = useNavigate()
@@ -76,7 +57,7 @@ export default function PipelinesPage() {
       setLoading(true)
       setError(null)
       const data = await api.listPipelineRuns(namespace)
-      setRuns([...data].sort((a, b) => new Date(b.startTime) - new Date(a.startTime)))
+      setRuns(data)
     } catch (e) {
       setError(e.message)
     } finally {

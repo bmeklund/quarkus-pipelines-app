@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { formatDuration, formatTime } from '../utils'
 import {
   Card,
   CardTitle,
@@ -52,18 +53,6 @@ const STATUS_CONFIG = {
   },
 }
 
-function formatDuration(seconds) {
-  if (!seconds) return '—'
-  if (seconds < 60) return `${seconds}s`
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}m ${s}s`
-}
-
-function formatTimestamp(isoString) {
-  if (!isoString) return '—'
-  return new Date(isoString).toLocaleString()
-}
 
 export default function PipelineStatusCard({ run }) {
   const navigate = useNavigate()
@@ -140,7 +129,7 @@ export default function PipelineStatusCard({ run }) {
                 <Tooltip content="Start time">
                   <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>
                     <ClockIcon style={{ marginRight: '4px' }} />
-                    {formatTimestamp(run.startTime)}
+                    {formatTime(run.startTime)}
                   </span>
                 </Tooltip>
               </FlexItem>

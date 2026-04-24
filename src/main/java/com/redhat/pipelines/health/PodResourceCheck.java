@@ -12,8 +12,12 @@ import org.eclipse.microprofile.health.Readiness;
 @ApplicationScoped
 public class PodResourceCheck implements HealthCheck {
 
+    private final KubernetesClient kubernetesClient;
+
     @Inject
-    KubernetesClient kubernetesClient;
+    public PodResourceCheck(KubernetesClient kubernetesClient) {
+        this.kubernetesClient = kubernetesClient;
+    }
 
     @Override
     public HealthCheckResponse call() {

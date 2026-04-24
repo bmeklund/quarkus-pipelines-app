@@ -127,32 +127,6 @@ export default function ConfigPage() {
 
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>OpenTelemetry</CardTitle>
-                <CardBody>
-                  <DescriptionList isHorizontal isCompact>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>Enabled</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        <Label isCompact color={config.opentelemetry?.enabled ? 'green' : 'grey'}>
-                          {config.opentelemetry?.enabled ? 'Yes' : 'No'}
-                        </Label>
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                    <DescriptionListGroup>
-                      <DescriptionListTerm>OTLP Endpoint</DescriptionListTerm>
-                      <DescriptionListDescription>
-                        <span style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                          {config.opentelemetry?.endpoint}
-                        </span>
-                      </DescriptionListDescription>
-                    </DescriptionListGroup>
-                  </DescriptionList>
-                </CardBody>
-              </Card>
-            </GridItem>
-
-            <GridItem span={12} md={6}>
-              <Card isCompact>
                 <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Runtime</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>

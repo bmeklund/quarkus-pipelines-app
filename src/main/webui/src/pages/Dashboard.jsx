@@ -58,7 +58,7 @@ export default function Dashboard() {
     fetchData()
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
-  }, [fetchData])
+  }, [fetchData, namespace])
 
   const stats = {
     total: allRuns.length,
@@ -112,7 +112,7 @@ export default function Dashboard() {
       )}
 
       <PageSection>
-        <Flex hasGutter>
+        <Flex gap={{ default: 'gapMd' }}>
           <FlexItem flex={{ default: 'flex_1' }}>
             <StatCard title="Total Runs" value={stats.total} icon={<TasksIcon />} color="var(--pf-t--global--text--color--100)" />
           </FlexItem>

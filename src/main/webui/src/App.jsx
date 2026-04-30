@@ -113,7 +113,7 @@ export default function App() {
   )
 
   return (
-    <Page masthead={masthead} sidebar={sidebar} isSidebarOpen={sidebarOpen}>
+    <Page masthead={masthead} sidebar={sidebar}>
       {configError && (
         <PageSection>
           <Alert variant="danger" title="Failed to load application configuration" isInline>{configError}</Alert>

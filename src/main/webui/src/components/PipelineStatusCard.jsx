@@ -23,6 +23,9 @@ import {
   QuestionCircleIcon,
   ClockIcon,
   OutlinedPlayCircleIcon,
+  GitIcon,
+  BuilderImageIcon,
+  TasksIcon,
 } from '@patternfly/react-icons'
 
 const STATUS_CONFIG = {
@@ -52,6 +55,12 @@ const STATUS_CONFIG = {
   },
 }
 
+function getTaskIcon(taskName) {
+  const normalizedTaskName = taskName?.toLowerCase() || ''
+  if (normalizedTaskName.includes('git')) return <GitIcon />
+  if (normalizedTaskName.includes('s2i') || normalizedTaskName.includes('build')) return <BuilderImageIcon />
+  return <TasksIcon />
+}
 
 export default function PipelineStatusCard({ run }) {
   const navigate = useNavigate()
@@ -162,18 +171,15 @@ export default function PipelineStatusCard({ run }) {
           {run.taskRuns && run.taskRuns.length > 0 && (
             <StackItem>
               <Flex gap={{ default: 'gapXs' }}>
-                {run.taskRuns.map((tr) => {
-                  const trCfg = STATUS_CONFIG[normalizeStatus(tr.status)] || STATUS_CONFIG.Unknown
-                  return (
-                    <FlexItem key={tr.name}>
-                      <Tooltip content={`${tr.taskName}: ${tr.status}`}>
-                        <Label isCompact color={trCfg.color} icon={trCfg.icon}>
-                          {tr.taskName}
-                        </Label>
-                      </Tooltip>
-                    </FlexItem>
-                  )
-                })}
+                {run.taskRuns.map((tr) => (
+                  <FlexItem key={tr.name}>
+                    <Tooltip content={tr.taskName}>
+                      <Label isCompact variant="outline" color="blue" icon={getTaskIcon(tr.taskName)}>
+                        {tr.taskName}
+                      </Label>
+                    </Tooltip>
+                  </FlexItem>
+                ))}
               </Flex>
             </StackItem>
           )}

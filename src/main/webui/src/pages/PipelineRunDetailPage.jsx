@@ -26,9 +26,39 @@ import {
   Tbody,
   Td,
 } from '@patternfly/react-table'
-import { ArrowLeftIcon } from '@patternfly/react-icons'
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  TimesCircleIcon,
+  SyncAltIcon,
+  BanIcon,
+  QuestionCircleIcon,
+  OutlinedPlayCircleIcon,
+} from '@patternfly/react-icons'
 import { api } from '../api/client'
-import { STATUS_COLOR, formatDuration, formatTime } from '../utils'
+import { formatDuration, formatTime, getStatusLabelColor, normalizeStatus } from '../utils'
+
+const STATUS_ICON = {
+  Running: <SyncAltIcon />,
+  Succeeded: <CheckCircleIcon />,
+  Failed: <TimesCircleIcon />,
+  Cancelled: <BanIcon />,
+  Pending: <OutlinedPlayCircleIcon />,
+  Unknown: <QuestionCircleIcon />,
+}
+
+function StatusLabel({ status }) {
+  const normalizedStatus = normalizeStatus(status)
+  return (
+    <Label
+      color={getStatusLabelColor(normalizedStatus)}
+      icon={STATUS_ICON[normalizedStatus] || STATUS_ICON.Unknown}
+      isCompact
+    >
+      {status}
+    </Label>
+  )
+}
 
 export default function PipelineRunDetailPage() {
   const { namespace, name } = useParams()
@@ -86,7 +116,7 @@ export default function PipelineRunDetailPage() {
                     <DescriptionListGroup>
                       <DescriptionListTerm>Status</DescriptionListTerm>
                       <DescriptionListDescription>
-                        <Label color={STATUS_COLOR[run.status] || 'grey'} isCompact>{run.status}</Label>
+                        <StatusLabel status={run.status} />
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     {run.reason && (
@@ -215,7 +245,7 @@ export default function PipelineRunDetailPage() {
                               <div style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--200)' }}>{tr.name}</div>
                             </Td>
                             <Td dataLabel="Status">
-                              <Label color={STATUS_COLOR[tr.status] || 'grey'} isCompact>{tr.status}</Label>
+                              <StatusLabel status={tr.status} />
                             </Td>
                             <Td dataLabel="Started">{formatTime(tr.startTime)}</Td>
                             <Td dataLabel="Duration">{formatDuration(tr.durationSeconds)}</Td>

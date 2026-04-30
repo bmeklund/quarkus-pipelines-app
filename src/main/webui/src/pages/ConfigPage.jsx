@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   PageSection,
   Title,
@@ -27,7 +27,7 @@ export default function ConfigPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -37,9 +37,9 @@ export default function ConfigPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { fetchConfig() }, [])
+  useEffect(() => { fetchConfig() }, [fetchConfig])
 
   return (
     <>
@@ -50,7 +50,7 @@ export default function ConfigPage() {
               <CogIcon style={{ marginRight: '8px' }} />
               Configuration
             </Title>
-            <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px' }}>
+            <p style={{ color: 'var(--pf-t--global--text--color--200)', marginTop: '4px' }}>
               Application configuration (non-sensitive properties)
             </p>
           </SplitItem>
@@ -77,7 +77,7 @@ export default function ConfigPage() {
           <Grid hasGutter>
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Application</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-t--global--border--color--100)', paddingBottom: '12px' }}>Application</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     <DescriptionListGroup>
@@ -103,7 +103,7 @@ export default function ConfigPage() {
 
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Pipelines</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-t--global--border--color--100)', paddingBottom: '12px' }}>Pipelines</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     <DescriptionListGroup>
@@ -127,7 +127,7 @@ export default function ConfigPage() {
 
             <GridItem span={12} md={6}>
               <Card isCompact>
-                <CardTitle style={{ borderBottom: '1px solid var(--pf-v6-global--BorderColor--100)', paddingBottom: '12px' }}>Runtime</CardTitle>
+                <CardTitle style={{ borderBottom: '1px solid var(--pf-t--global--border--color--100)', paddingBottom: '12px' }}>Runtime</CardTitle>
                 <CardBody>
                   <DescriptionList isHorizontal isCompact>
                     {config.runtime && Object.entries(config.runtime).map(([k, v]) => (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   PageSection,
   Title,
@@ -27,6 +27,7 @@ import {
 import { api } from '../api/client'
 import PipelineStatusCard from '../components/PipelineStatusCard'
 import { useAppConfig } from '../context/AppConfigContext'
+import { getStatusAccentColor, normalizeStatus } from '../utils'
 
 export default function Dashboard() {
   const config = useAppConfig()
@@ -36,7 +37,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null)
   const fetchingRef = useRef(false)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!namespace || fetchingRef.current) return
     fetchingRef.current = true
     try {
@@ -50,21 +51,21 @@ export default function Dashboard() {
       setLoading(false)
       fetchingRef.current = false
     }
-  }
+  }, [namespace])
 
   useEffect(() => {
     if (!namespace) return
     fetchData()
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
-  }, [namespace])
+  }, [fetchData])
 
   const stats = {
     total: allRuns.length,
-    succeeded: allRuns.filter((r) => r.status === 'Succeeded').length,
-    cancelled: allRuns.filter((r) => r.status === 'Cancelled').length,
-    failed: allRuns.filter((r) => r.status === 'Failed').length,
-    running: allRuns.filter((r) => r.status === 'Running').length,
+    succeeded: allRuns.filter((r) => normalizeStatus(r.status) === 'Succeeded').length,
+    cancelled: allRuns.filter((r) => normalizeStatus(r.status) === 'Cancelled').length,
+    failed: allRuns.filter((r) => normalizeStatus(r.status) === 'Failed').length,
+    running: allRuns.filter((r) => normalizeStatus(r.status) === 'Running').length,
   }
 
   const recentRuns = allRuns.slice(0, 6)
@@ -73,7 +74,7 @@ export default function Dashboard() {
     <>
       <PageSection variant="light">
         <Title headingLevel="h1" size="2xl" style={{ marginBottom: '16px' }}>Pipeline Dashboard</Title>
-        <Card style={{ border: '1px solid #4695EB', borderRadius: '8px' }}>
+        <Card style={{ border: '1px solid var(--pf-t--global--color--status--info--default)', borderRadius: '8px' }}>
           <CardBody>
             <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapLg' }}>
               <FlexItem>
@@ -81,9 +82,9 @@ export default function Dashboard() {
               </FlexItem>
               <FlexItem>
                 <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
-                  <FlexItem><LayerGroupIcon style={{ color: '#4695EB' }} /></FlexItem>
+                  <FlexItem><LayerGroupIcon style={{ color: 'var(--pf-t--global--color--status--info--default)' }} /></FlexItem>
                   <FlexItem>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>Namespace</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--pf-t--global--text--color--200)' }}>Namespace</span>
                     <div style={{ fontWeight: 700 }}>{namespace}</div>
                   </FlexItem>
                 </Flex>
@@ -93,7 +94,7 @@ export default function Dashboard() {
                   <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
                     <FlexItem><ServerIcon style={{ color: '#4695EB' }} /></FlexItem>
                     <FlexItem>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>API Server</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--pf-t--global--text--color--200)' }}>API Server / Cluster</span>
                       <div style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{config['api-server-url']}</div>
                     </FlexItem>
                   </Flex>
@@ -113,19 +114,19 @@ export default function Dashboard() {
       <PageSection>
         <Flex hasGutter>
           <FlexItem flex={{ default: 'flex_1' }}>
-            <StatCard title="Total Runs" value={stats.total} icon={<TasksIcon />} color="var(--pf-v6-global--Color--100)" />
+            <StatCard title="Total Runs" value={stats.total} icon={<TasksIcon />} color="var(--pf-t--global--text--color--100)" />
           </FlexItem>
           <FlexItem flex={{ default: 'flex_1' }}>
-            <StatCard title="Succeeded" value={stats.succeeded} icon={<CheckCircleIcon />} color="#3E8635" />
+            <StatCard title="Succeeded" value={stats.succeeded} icon={<CheckCircleIcon />} color={getStatusAccentColor('Succeeded')} />
           </FlexItem>
           <FlexItem flex={{ default: 'flex_1' }}>
-            <StatCard title="Cancelled" value={stats.cancelled} icon={<BanIcon />} color="#F0AB00" />
+            <StatCard title="Cancelled" value={stats.cancelled} icon={<BanIcon />} color={getStatusAccentColor('Cancelled')} />
           </FlexItem>
           <FlexItem flex={{ default: 'flex_1' }}>
-            <StatCard title="Failed" value={stats.failed} icon={<TimesCircleIcon />} color="#C9190B" />
+            <StatCard title="Failed" value={stats.failed} icon={<TimesCircleIcon />} color={getStatusAccentColor('Failed')} />
           </FlexItem>
           <FlexItem flex={{ default: 'flex_1' }}>
-            <StatCard title="Running" value={stats.running} icon={<SyncAltIcon />} color="#4695EB" />
+            <StatCard title="Running" value={stats.running} icon={<SyncAltIcon />} color={getStatusAccentColor('Running')} />
           </FlexItem>
         </Flex>
       </PageSection>
@@ -162,7 +163,7 @@ function StatCard({ title, value, icon, color }) {
           </FlexItem>
           <FlexItem flex={{ default: 'flex_1' }}>
             <div style={{ fontSize: '2rem', fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-            <div style={{ color: 'var(--pf-v6-global--Color--200)', fontSize: '0.9rem' }}>{title}</div>
+            <div style={{ color: 'var(--pf-t--global--text--color--200)', fontSize: '0.9rem' }}>{title}</div>
           </FlexItem>
         </Flex>
       </CardBody>

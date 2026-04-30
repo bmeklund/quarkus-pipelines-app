@@ -38,10 +38,14 @@ export default function PipelineRunDetailPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    let mounted = true
+    setLoading(true)
+    setError(null)
     api.getPipelineRun(namespace, name)
-      .then(setRun)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
+      .then((data) => { if (mounted) setRun(data) })
+      .catch((e) => { if (mounted) setError(e.message) })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
   }, [namespace, name])
 
   return (
@@ -54,7 +58,7 @@ export default function PipelineRunDetailPage() {
           {name}
         </Title>
         {run && (
-          <span style={{ color: 'var(--pf-v6-global--Color--200)', fontSize: '0.9rem' }}>
+          <span style={{ color: 'var(--pf-t--global--text--color--200)', fontSize: '0.9rem' }}>
             Pipeline: <strong>{run.pipelineName}</strong> &nbsp;·&nbsp; Namespace: <strong>{namespace}</strong>
           </span>
         )}
@@ -136,11 +140,19 @@ export default function PipelineRunDetailPage() {
                       <DescriptionListGroup>
                         <DescriptionListTerm>Repository</DescriptionListTerm>
                         <DescriptionListDescription>
-                          {run.repositoryUrl ? (
-                            <a href={run.repositoryUrl} target="_blank" rel="noopener noreferrer">
-                              {run.repository || run.repositoryUrl}
-                            </a>
-                          ) : run.repository}
+                          {(() => {
+                            try {
+                              const p = new URL(run.repositoryUrl).protocol
+                              if (p === 'http:' || p === 'https:') {
+                                return (
+                                  <a href={run.repositoryUrl} target="_blank" rel="noopener noreferrer">
+                                    {run.repository || run.repositoryUrl}
+                                  </a>
+                                )
+                              }
+                            } catch { /* not a valid URL */ }
+                            return run.repository || run.repositoryUrl
+                          })()}
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                     )}
@@ -150,7 +162,7 @@ export default function PipelineRunDetailPage() {
                         <DescriptionListDescription>
                           <span style={{ fontFamily: 'monospace' }}>{run.gitCommit.substring(0, 8)}</span>
                           {run.pacShaTitle && (
-                            <span style={{ marginLeft: '8px', color: 'var(--pf-v6-global--Color--200)', fontSize: '0.85rem' }}>
+                            <span style={{ marginLeft: '8px', color: 'var(--pf-t--global--text--color--200)', fontSize: '0.85rem' }}>
                               {run.pacShaTitle}
                             </span>
                           )}
@@ -168,7 +180,7 @@ export default function PipelineRunDetailPage() {
                     <div style={{
                       marginTop: '16px',
                       padding: '12px',
-                      backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)',
+                      backgroundColor: 'var(--pf-t--global--background--color--200)',
                       borderRadius: '4px',
                       fontSize: '0.85rem',
                       fontFamily: 'monospace',
@@ -200,7 +212,7 @@ export default function PipelineRunDetailPage() {
                           <Tr key={tr.name}>
                             <Td dataLabel="Task">
                               <div style={{ fontWeight: 600 }}>{tr.taskName}</div>
-                              <div style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--pf-v6-global--Color--200)' }}>{tr.name}</div>
+                              <div style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--200)' }}>{tr.name}</div>
                             </Td>
                             <Td dataLabel="Status">
                               <Label color={STATUS_COLOR[tr.status] || 'grey'} isCompact>{tr.status}</Label>

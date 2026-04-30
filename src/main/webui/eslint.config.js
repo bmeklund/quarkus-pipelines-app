@@ -7,6 +7,12 @@ import react from 'eslint-plugin-react'
 export default [
   { ignores: ['dist', 'node_modules'] },
   {
+    files: ['vite.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2020,

@@ -1,3 +1,24 @@
+.pf-v6-c-nav .app-nav-link {
+  --pf-v6-c-nav__link--Color: inherit;
+  --pf-v6-c-nav__link--hover--BackgroundColor: #fff;
+  --pf-v6-c-nav__link--hover--Color: #ee0000;
+  --pf-v6-c-nav__link--m-current--BackgroundColor: #fff;
+  --pf-v6-c-nav__link--m-current--Color: #ee0000;
+}
+
+.pf-v6-c-nav .app-nav-link:hover,
+.pf-v6-c-nav .app-nav-link:focus,
+.pf-v6-c-nav .app-nav-link.pf-m-current,
+.pf-v6-c-nav .app-nav-link.pf-m-current:hover,
+.pf-v6-c-nav .app-nav-link.pf-m-current:focus {
+  background-color: #fff;
+  color: #ee0000;
+}
+
+.pf-v6-c-nav .app-nav-link.pf-m-current {
+  font-weight: 600;
+}
+
 .clickable-row:hover > td {
   background-color: #e8e8e8 !important;
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom'
 import {
   Page,
   Masthead,
@@ -12,6 +12,8 @@ import {
   NavItem,
   PageSidebar,
   PageSidebarBody,
+  Alert,
+  PageSection,
 } from '@patternfly/react-core'
 import {
   TachometerAltIcon,
@@ -27,6 +29,7 @@ import PipelinesPage from './pages/PipelinesPage'
 import PipelineRunDetailPage from './pages/PipelineRunDetailPage'
 import HealthPage from './pages/HealthPage'
 import ConfigPage from './pages/ConfigPage'
+import { useAppConfigError } from './context/AppConfigContext'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: <TachometerAltIcon /> },
@@ -37,8 +40,12 @@ const navItems = [
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const location = useLocation()
-  const navigate = useNavigate()
+  const configError = useAppConfigError()
+  const { pathname } = useLocation()
+
+  const isNavItemActive = (to) => (
+    to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(`${to}/`)
+  )
 
   const masthead = (
     <Masthead style={{ backgroundColor: '#151515', position: 'relative' }}>
@@ -55,7 +62,9 @@ export default function App() {
           </PageToggleButton>
         </MastheadToggle>
         <MastheadBrand>
-          <img src={quarkusLogo} alt="Quarkus" style={{ height: '36px', cursor: 'pointer' }} onClick={() => navigate('/')} />
+          <Link to="/">
+            <img src={quarkusLogo} alt="Quarkus" style={{ height: '36px' }} />
+          </Link>
         </MastheadBrand>
       </MastheadMain>
       <span style={{
@@ -79,18 +88,18 @@ export default function App() {
         <Nav aria-label="Main navigation">
           <NavList>
             {navItems.map(({ to, label, icon }) => (
-              <NavItem key={to} isActive={location.pathname === to}>
+              <NavItem key={to} isActive={isNavItemActive(to)}>
                 <NavLink
                   to={to}
-                  style={({ isActive }) => ({
+                  end={to === '/'}
+                  className="app-nav-link"
+                  style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    color: isActive ? '#EE0000' : 'inherit',
-                    fontWeight: isActive ? 600 : 400,
                     textDecoration: 'none',
                     padding: '8px 16px',
-                  })}
+                  }}
                 >
                   {icon}
                   {label}
@@ -105,6 +114,11 @@ export default function App() {
 
   return (
     <Page masthead={masthead} sidebar={sidebar} isSidebarOpen={sidebarOpen}>
+      {configError && (
+        <PageSection>
+          <Alert variant="danger" title="Failed to load application configuration" isInline>{configError}</Alert>
+        </PageSection>
+      )}
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/pipelines" element={<PipelinesPage />} />

@@ -1,4 +1,4 @@
-import React from 'react'
+import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -9,11 +9,11 @@ import '@patternfly/react-core/dist/styles/base.css'
 import './app.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  <StrictMode>
     <BrowserRouter>
       <AppConfigProvider>
         <App />
       </AppConfigProvider>
     </BrowserRouter>
-  </React.StrictMode>,
+  </StrictMode>,
 )

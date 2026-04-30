@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { formatDuration, formatTime } from '../utils'
+import { formatDuration, formatTime, getStatusAccentColor, getStatusLabelColor, normalizeStatus } from '../utils'
 import {
   Card,
   CardTitle,
@@ -27,28 +27,27 @@ import {
 
 const STATUS_CONFIG = {
   Running: {
-    color: 'blue',
+    color: getStatusLabelColor('Running'),
     icon: <SyncAltIcon />,
-    spin: true,
   },
   Succeeded: {
-    color: 'green',
+    color: getStatusLabelColor('Succeeded'),
     icon: <CheckCircleIcon />,
   },
   Failed: {
-    color: 'red',
+    color: getStatusLabelColor('Failed'),
     icon: <TimesCircleIcon />,
   },
   Cancelled: {
-    color: 'orange',
+    color: getStatusLabelColor('Cancelled'),
     icon: <BanIcon />,
   },
   Pending: {
-    color: 'grey',
+    color: getStatusLabelColor('Pending'),
     icon: <OutlinedPlayCircleIcon />,
   },
   Unknown: {
-    color: 'grey',
+    color: getStatusLabelColor('Unknown'),
     icon: <QuestionCircleIcon />,
   },
 }
@@ -56,21 +55,18 @@ const STATUS_CONFIG = {
 
 export default function PipelineStatusCard({ run }) {
   const navigate = useNavigate()
-  const cfg = STATUS_CONFIG[run.status] || STATUS_CONFIG.Unknown
+  const normalizedStatus = normalizeStatus(run.status)
+  const cfg = STATUS_CONFIG[normalizedStatus] || STATUS_CONFIG.Unknown
   const isRunning = run.status === 'Running'
+  const detailPath = `/pipelines/${encodeURIComponent(run.namespace)}/${encodeURIComponent(run.name)}`
 
   return (
     <Card
       isCompact
       isClickable
-      onClick={() => navigate(`/pipelines/${run.namespace}/${run.name}`)}
+      onClick={() => navigate(detailPath)}
       style={{
-        borderLeft: `4px solid ${
-          run.status === 'Failed' ? '#C9190B'
-          : run.status === 'Succeeded' ? '#3E8635'
-          : run.status === 'Cancelled' ? '#F0AB00'
-          : '#4695EB'
-        }`,
+        borderLeft: `4px solid ${getStatusAccentColor(run.status)}`,
         cursor: 'pointer',
       }}
     >
@@ -90,7 +86,7 @@ export default function PipelineStatusCard({ run }) {
             >
               {run.name}
             </span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--pf-t--global--text--color--200)' }}>
               {run.pipelineName}
             </span>
           </SplitItem>
@@ -112,7 +108,7 @@ export default function PipelineStatusCard({ run }) {
               <span
                 style={{
                   fontSize: '0.8rem',
-                  color: run.status === 'Failed' ? 'var(--pf-v6-global--danger-color--100)' : 'var(--pf-v6-global--Color--200)',
+                  color: run.status === 'Failed' ? 'var(--pf-t--global--color--status--danger--default)' : 'var(--pf-t--global--text--color--200)',
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: 'vertical',
@@ -127,7 +123,7 @@ export default function PipelineStatusCard({ run }) {
             <Flex gap={{ default: 'gapMd' }}>
               <FlexItem>
                 <Tooltip content="Start time">
-                  <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--pf-t--global--text--color--200)' }}>
                     <ClockIcon style={{ marginRight: '4px' }} />
                     {formatTime(run.startTime)}
                   </span>
@@ -135,7 +131,7 @@ export default function PipelineStatusCard({ run }) {
               </FlexItem>
               {run.durationSeconds != null && (
                 <FlexItem>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--pf-v6-global--Color--200)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--pf-t--global--text--color--200)' }}>
                     {isRunning ? 'Running for: ' : 'Duration: '}
                     {formatDuration(run.durationSeconds)}
                   </span>
@@ -167,7 +163,7 @@ export default function PipelineStatusCard({ run }) {
             <StackItem>
               <Flex gap={{ default: 'gapXs' }}>
                 {run.taskRuns.map((tr) => {
-                  const trCfg = STATUS_CONFIG[tr.status] || STATUS_CONFIG.Unknown
+                  const trCfg = STATUS_CONFIG[normalizeStatus(tr.status)] || STATUS_CONFIG.Unknown
                   return (
                     <FlexItem key={tr.name}>
                       <Tooltip content={`${tr.taskName}: ${tr.status}`}>
@@ -184,7 +180,12 @@ export default function PipelineStatusCard({ run }) {
         </Stack>
       </CardBody>
       <CardFooter>
-        <Button variant="link" isInline size="sm" onClick={() => navigate(`/pipelines/${run.namespace}/${run.name}`)}>
+        <Button
+          variant="link"
+          isInline
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); navigate(detailPath) }}
+        >
           Details
         </Button>
       </CardFooter>

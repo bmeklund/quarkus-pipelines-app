@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.tekton.client.DefaultTektonClient;
 import io.fabric8.tekton.client.TektonClient;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -25,5 +26,10 @@ public class TektonClientProducer {
     TektonClient tektonClient() {
         LOG.infof("Initializing Tekton client against: %s", kubernetesClient.getMasterUrl());
         return new DefaultTektonClient(kubernetesClient);
+    }
+
+    void closeTektonClient(@Disposes TektonClient tektonClient) {
+        LOG.info("Closing Tekton client");
+        tektonClient.close();
     }
 }

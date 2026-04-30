@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   PageSection,
   Title,
@@ -23,6 +23,7 @@ import {
 } from '@patternfly/react-core'
 import { CheckCircleIcon, TimesCircleIcon, SyncAltIcon, HeartbeatIcon } from '@patternfly/react-icons'
 import { api } from '../api/client'
+import { formatTimeOnly } from '../utils'
 
 export default function HealthPage() {
   const [health, setHealth] = useState(null)
@@ -30,25 +31,25 @@ export default function HealthPage() {
   const [error, setError] = useState(null)
   const [lastChecked, setLastChecked] = useState(null)
 
-  const fetchHealth = async () => {
+  const fetchHealth = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
       const data = await api.getHealth()
       setHealth(data)
-      setLastChecked(new Date().toLocaleTimeString())
+      setLastChecked(new Date().toISOString())
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchHealth()
     const interval = setInterval(fetchHealth, 120000)
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchHealth])
 
   const overallUp = health?.status === 'UP'
 
@@ -62,8 +63,8 @@ export default function HealthPage() {
               Health
             </Title>
             {lastChecked && (
-              <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px', fontSize: '0.85rem' }}>
-                Last checked: {lastChecked} — auto-refreshes every 2m
+              <p style={{ color: 'var(--pf-t--global--text--color--200)', marginTop: '4px', fontSize: '0.85rem' }}>
+                Last checked: {formatTimeOnly(lastChecked)} — auto-refreshes every 2m
               </p>
             )}
           </SplitItem>
@@ -93,8 +94,8 @@ export default function HealthPage() {
                 <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapLg' }}>
                   <FlexItem>
                     {overallUp
-                      ? <CheckCircleIcon color="#3E8635" style={{ fontSize: '3rem' }} />
-                      : <TimesCircleIcon color="#C9190B" style={{ fontSize: '3rem' }} />
+                      ? <CheckCircleIcon color="var(--pf-t--global--color--status--success--default)" style={{ fontSize: '3rem' }} />
+                      : <TimesCircleIcon color="var(--pf-t--global--color--status--danger--default)" style={{ fontSize: '3rem' }} />
                     }
                   </FlexItem>
                   <FlexItem>
@@ -138,7 +139,7 @@ function HealthCheckCard({ check }) {
     <Card
       isCompact
       style={{
-        borderLeft: `4px solid ${isUp ? '#3E8635' : '#C9190B'}`,
+        borderLeft: `4px solid ${isUp ? 'var(--pf-t--global--color--status--success--default)' : 'var(--pf-t--global--color--status--danger--default)'}`,
       }}
     >
       <CardTitle>

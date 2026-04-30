@@ -85,6 +85,12 @@
       <version>6.13.4</version>
     </dependency>
 
+    <!-- Bean validation for REST path/query parameter constraints -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+    </dependency>
+
     <!-- OpenAPI / Swagger UI -->
     <dependency>
       <groupId>io.quarkus</groupId>

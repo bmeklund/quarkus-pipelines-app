@@ -2,10 +2,9 @@ const BASE = '/api'
 const QUARKUS = '/q'
 
 async function fetchJson(url, options = {}) {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  })
+  const headers = { ...options.headers }
+  if (options.body) headers['Content-Type'] = 'application/json'
+  const res = await fetch(url, { headers, ...options })
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`HTTP ${res.status}: ${text}`)
@@ -36,11 +35,5 @@ export const api = {
   // Health
   getHealth: () =>
     fetchJson(`${QUARKUS}/health`),
-
-  getLiveness: () =>
-    fetchJson(`${QUARKUS}/health/live`),
-
-  getReadiness: () =>
-    fetchJson(`${QUARKUS}/health/ready`),
 }
 

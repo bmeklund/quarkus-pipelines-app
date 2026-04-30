@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   PageSection,
@@ -38,20 +38,23 @@ import { api } from '../api/client'
 import { useAppConfig } from '../context/AppConfigContext'
 import { STATUS_COLOR, formatDuration, formatTime } from '../utils'
 
+const DEFAULT_WORKSPACE_NAME = 'shared-data'
+const DEFAULT_WORKSPACE_SIZE = '1Gi'
+
 export default function PipelinesPage() {
   const navigate = useNavigate()
-  const { namespace } = useAppConfig() ?? {}
+  const namespace = useAppConfig()?.namespace
   const [runs, setRuns] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [triggerModal, setTriggerModal] = useState(false)
-  const [triggerForm, setTriggerForm] = useState({ pipelineName: '', appName: '', appVersion: '', workspaceName: 'shared-data', workspaceStorageSize: '1Gi' })
+  const [triggerForm, setTriggerForm] = useState({ pipelineName: '', appName: '', appVersion: '', workspaceName: DEFAULT_WORKSPACE_NAME, workspaceStorageSize: DEFAULT_WORKSPACE_SIZE })
   const [triggering, setTriggering] = useState(false)
   const [triggerError, setTriggerError] = useState(null)
   const [pipelines, setPipelines] = useState([])
   const [pipelinesLoading, setPipelinesLoading] = useState(false)
 
-  const fetchRuns = async () => {
+  const fetchRuns = useCallback(async () => {
     if (!namespace) return
     try {
       setLoading(true)
@@ -63,12 +66,16 @@ export default function PipelinesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [namespace])
 
-  useEffect(() => { fetchRuns() }, [namespace])
+  useEffect(() => {
+    fetchRuns()
+    const interval = setInterval(fetchRuns, 30000)
+    return () => clearInterval(interval)
+  }, [fetchRuns])
 
   const openTriggerModal = async () => {
-    setTriggerForm({ pipelineName: '', appName: '', appVersion: '', workspaceName: 'shared-data', workspaceStorageSize: '1Gi' })
+    setTriggerForm({ pipelineName: '', appName: '', appVersion: '', workspaceName: DEFAULT_WORKSPACE_NAME, workspaceStorageSize: DEFAULT_WORKSPACE_SIZE })
     setTriggerError(null)
     setTriggerModal(true)
     setPipelinesLoading(true)
@@ -121,7 +128,7 @@ export default function PipelinesPage() {
     <>
       <PageSection variant="light">
         <Title headingLevel="h1" size="2xl">Pipeline Runs</Title>
-        <p style={{ color: 'var(--pf-v6-global--Color--200)', marginTop: '4px' }}>
+        <p style={{ color: 'var(--pf-t--global--text--color--200)', marginTop: '4px' }}>
           Namespace: <strong>{namespace}</strong>
         </p>
       </PageSection>
@@ -141,7 +148,7 @@ export default function PipelinesPage() {
               </Button>
             </ToolbarItem>
             <ToolbarItem align={{ default: 'alignRight' }}>
-              <Button variant="primary" icon={<PlayIcon />} onClick={openTriggerModal} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
+              <Button variant="primary" icon={<PlayIcon />} onClick={openTriggerModal}>
                 Trigger Run
               </Button>
             </ToolbarItem>
@@ -164,7 +171,7 @@ export default function PipelinesPage() {
                 <Tr
                   key={run.name}
                   className="clickable-row"
-                  onClick={() => navigate(`/pipelines/${run.namespace}/${run.name}`)}
+                  onClick={() => navigate(`/pipelines/${encodeURIComponent(run.namespace)}/${encodeURIComponent(run.name)}`)}
                   style={{ cursor: 'pointer' }}
                 >
                   <Td dataLabel="Name">
@@ -248,7 +255,7 @@ export default function PipelinesPage() {
             />
           </FormGroup>
           <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
-            <Button variant="primary" onClick={handleTrigger} isLoading={triggering} style={{ backgroundColor: '#4695EB', borderColor: '#4695EB' }}>
+            <Button variant="primary" onClick={handleTrigger} isLoading={triggering}>
               Start Pipeline Run
             </Button>
             <Button variant="link" onClick={closeTriggerModal}>

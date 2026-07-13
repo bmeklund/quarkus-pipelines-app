@@ -1,15 +1,10 @@
 ##############################################################################
 # Quarkus Pipelines App — OpenShift Deployment
 #
-# Before applying, replace YOUR_NAMESPACE with the namespace you are
-# deploying into (e.g. tekton-workshop-user1). This namespace is used both
-# as the deployment target and as the Tekton namespace the app will monitor.
-#
-#   sed 's/YOUR_NAMESPACE/tekton-workshop-user1/g' deployment.yaml | oc apply -f -
-#
-# The ClusterRoleBinding grants the ServiceAccount cross-namespace read
-# access to Tekton resources. The subject namespace MUST match the namespace
-# where the ServiceAccount lives (i.e. the deployment namespace).
+# This manifest is namespace-scoped. Replace YOUR_NAMESPACE at deploy time with
+# the namespace that should own the deployment and Tekton resources, for example
+# tekton-workshop-user1 through tekton-workshop-user99. The ConfigMap value below
+# sets quarkus.kubernetes-client.namespace for the running app.
 ##############################################################################
 
 ---
@@ -23,31 +18,29 @@ metadata:
     app.kubernetes.io/part-of: pipelines-dashboard
 
 ---
-# ClusterRole: read access to Tekton resources cluster-wide
+# Role: read-only access to dashboard data in the configured namespace
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: pipelines-dashboard-viewer
+  namespace: YOUR_NAMESPACE
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
     app.kubernetes.io/part-of: pipelines-dashboard
 rules:
   - apiGroups: ["tekton.dev"]
     resources: ["pipelineruns", "taskruns", "pipelines", "tasks"]
-    verbs: ["get", "list", "watch", "create"]
-  - apiGroups: [""]
-    resources: ["pods", "pods/log"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get", "list"]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
 
 ---
-# IMPORTANT: subjects[].namespace must match the namespace the ServiceAccount is deployed in
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: pipelines-dashboard-viewer-binding
+  namespace: YOUR_NAMESPACE
   labels:
     app.kubernetes.io/name: quarkus-pipelines-app
     app.kubernetes.io/part-of: pipelines-dashboard
@@ -56,8 +49,41 @@ subjects:
     name: pipelines-dashboard
     namespace: YOUR_NAMESPACE
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: pipelines-dashboard-viewer
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Role: create-only access for user-triggered PipelineRuns
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pipelines-dashboard-run-creator
+  namespace: YOUR_NAMESPACE
+  labels:
+    app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
+rules:
+  - apiGroups: ["tekton.dev"]
+    resources: ["pipelineruns"]
+    verbs: ["create"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipelines-dashboard-run-creator-binding
+  namespace: YOUR_NAMESPACE
+  labels:
+    app.kubernetes.io/name: quarkus-pipelines-app
+    app.kubernetes.io/part-of: pipelines-dashboard
+subjects:
+  - kind: ServiceAccount
+    name: pipelines-dashboard
+    namespace: YOUR_NAMESPACE
+roleRef:
+  kind: Role
+  name: pipelines-dashboard-run-creator
   apiGroup: rbac.authorization.k8s.io
 
 ---

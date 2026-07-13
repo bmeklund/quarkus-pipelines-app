@@ -35,7 +35,7 @@ import {
   TasksIcon,
 } from '@patternfly/react-icons'
 import { api } from '../api/client'
-import { useAppConfig } from '../context/AppConfigContext'
+import { useAppConfig } from '../context/AppConfigHooks'
 import { STATUS_COLOR, formatDuration, formatTime } from '../utils'
 
 const DEFAULT_WORKSPACE_NAME = 'shared-data'

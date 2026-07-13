@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Dashboard from './Dashboard'
 import { api } from '../api/client'
@@ -8,7 +8,7 @@ vi.mock('../api/client', () => ({
   api: { listPipelineRuns: vi.fn() },
 }))
 
-vi.mock('../context/AppConfigContext', () => ({
+vi.mock('../context/AppConfigHooks', () => ({
   useAppConfig: () => ({ namespace: 'test-ns' }),
   useAppConfigError: () => null,
 }))

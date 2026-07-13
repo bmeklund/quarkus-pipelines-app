@@ -13,7 +13,7 @@ vi.mock('../api/client', () => ({
   },
 }))
 
-vi.mock('../context/AppConfigContext', () => ({
+vi.mock('../context/AppConfigHooks', () => ({
   useAppConfig: () => ({ namespace: 'test-ns' }),
   useAppConfigError: () => null,
 }))

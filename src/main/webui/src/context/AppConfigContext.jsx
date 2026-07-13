@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../api/client'
-
-const AppConfigContext = createContext(null)
+import { AppConfigContext } from './AppConfigContextValue'
 
 export function AppConfigProvider({ children }) {
   const [config, setConfig] = useState(null)
@@ -21,12 +20,4 @@ export function AppConfigProvider({ children }) {
       {children}
     </AppConfigContext.Provider>
   )
-}
-
-export function useAppConfig() {
-  return useContext(AppConfigContext)?.data ?? null
-}
-
-export function useAppConfigError() {
-  return useContext(AppConfigContext)?.error ?? null
 }

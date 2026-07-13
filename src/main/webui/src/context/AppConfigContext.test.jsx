@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { AppConfigProvider, useAppConfig, useAppConfigError } from './AppConfigContext'
+import { AppConfigProvider } from './AppConfigContext'
+import { useAppConfig, useAppConfigError } from './AppConfigHooks'
 import { api } from '../api/client'
 
 vi.mock('../api/client', () => ({

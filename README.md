@@ -81,7 +81,7 @@ All properties live in [src/main/resources/application.properties](src/main/reso
 | `app.pipelines.namespaces` | `default` | Comma-separated list of namespaces to watch |
 | `app.pipelines.watch-interval` | `30s` | How often the dashboard polls for updates |
 | `app.pipelines.log-tail-lines` | `200` | Number of log lines fetched per pod tail |
-| `quarkus.kubernetes-client.trust-certs` | `true` | Trust self-signed certs on the API server |
+| `%dev.quarkus.kubernetes-client.trust-certs` | `true` | Trust self-signed API server certs only during local development |
 | `quarkus.kubernetes-client.namespace` | `default` | Default namespace for the K8s client |
 | `quarkus.otel.exporter.otlp.endpoint` | `http://localhost:4317` | OTLP collector endpoint |
 | `quarkus.otel.enabled` | `true` | Enable/disable OpenTelemetry |

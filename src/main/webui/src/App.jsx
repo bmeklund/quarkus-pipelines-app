@@ -29,7 +29,7 @@ import PipelinesPage from './pages/PipelinesPage'
 import PipelineRunDetailPage from './pages/PipelineRunDetailPage'
 import HealthPage from './pages/HealthPage'
 import ConfigPage from './pages/ConfigPage'
-import { useAppConfigError } from './context/AppConfigContext'
+import { useAppConfigError } from './context/AppConfigHooks'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: <TachometerAltIcon /> },

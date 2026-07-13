@@ -26,7 +26,7 @@ import {
 } from '@patternfly/react-icons'
 import { api } from '../api/client'
 import PipelineStatusCard from '../components/PipelineStatusCard'
-import { useAppConfig } from '../context/AppConfigContext'
+import { useAppConfig } from '../context/AppConfigHooks'
 import { getStatusAccentColor, normalizeStatus } from '../utils'
 
 export default function Dashboard() {
